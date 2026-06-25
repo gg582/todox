@@ -13,14 +13,7 @@
 #include <compat/bsd/time.h>
 #endif
 
-/**
-  * @brief parses an ISO 8601 datetime string into a UTC time_t.
-  * @details accepts "YYYY-MM-DD HH:MM:SS" (interpreted in the system timezone) or
-  *          "YYYY-MM-DD HH:MM:SS +HHMM" (converted to UTC).
-  * @param[in] ts a null-terminated datetime string.
-  * @return seconds since the Unix epoch, or (time_t)-1 on failure.
-  */
-
+/** @brief tries parsing a datetime string without timezone. */
 static inline char *try_convert_without_tz(const char *s, struct tm *tm_time)
 {
     return strptime(s, TODOX_TIME_COMPAT_FORMAT, tm_time);
@@ -43,6 +36,7 @@ static int parse_tz_offset(const char *s) {
     return 0;
 }
 
+/** @brief parses an ISO 8601 datetime string into a time_t (implementation). */
 time_t iso8601_to_time_t(const char *ts)
 {
     struct tm tm_time = {0};
