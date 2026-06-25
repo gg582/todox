@@ -15,8 +15,10 @@
 #include <fcntl.h>
 
 /** @brief detaches the process into a background daemon.
-  * @details performs the standard double-fork, setsid, chdir("/"),
-  *          umask(0), and redirects stdin/stdout/stderr to /dev/null.
+  * @details performs the standard double-fork, setsid, umask(0), and
+  *          redirects stdin/stdout/stderr to /dev/null. chdir("/") is
+  *          intentionally omitted so that relative alarm file paths remain
+  *          valid after daemonization.
   * @return 0 on success, -1 on failure.
   */
 static int daemonize(void) {
@@ -40,9 +42,6 @@ static int daemonize(void) {
         exit(0);
     }
 
-    if(chdir("/") < 0) {
-        return -1;
-    }
     umask(0);
 
     close(STDIN_FILENO);
@@ -116,6 +115,11 @@ static int cmd_add(int argc, char **argv) {
     todox_format_t itm = {0};
     if(parse_triplet(triple, &itm) != 0) {
         fprintf(stderr, "invalid alarm format\n");
+        free(lst.tasks);
+        return 1;
+    }
+    if(todox_task_find(&lst, itm.task) != (unsigned)-1) {
+        fprintf(stderr, "duplicate task name: %s\n", itm.task);
         free(lst.tasks);
         return 1;
     }

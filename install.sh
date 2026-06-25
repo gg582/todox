@@ -4,7 +4,13 @@ set -e
 TARGET=$1
 BIN_DIR=/usr/local/bin
 CONFIG_DIR=/usr/local/etc/todox
-CONFIG_FILE=${TODOX_ALARM_FILE:-$CONFIG_DIR/alarm.txt}
+# Normalize TODOX_ALARM_FILE to an absolute path immediately. The daemon calls
+# chdir("/"), and systemd needs a stable absolute path in the unit file.
+if [ -n "${TODOX_ALARM_FILE:-}" ]; then
+    CONFIG_FILE=$(realpath -m "$TODOX_ALARM_FILE")
+else
+    CONFIG_FILE=$CONFIG_DIR/alarm.txt
+fi
 SERVICE_NAME=todox
 
 # Determine the user that should own the daemon. Desktop notifications are sent
@@ -25,13 +31,15 @@ detect_daemon_user() {
 }
 
 # Run a command as the target user. If already running as that user, run directly.
+# For systemctl --user we must supply the D-Bus session bus address and runtime
+# directory, because sudo does not preserve them.
 run_as_user() {
     local user=$1
     shift
     if [ "$(id -un)" = "$user" ]; then
-        "$@"
+        DBUS_SESSION_BUS_ADDRESS="$DAEMON_DBUS_ADDRESS" XDG_RUNTIME_DIR="$DAEMON_RUNTIME_DIR" "$@"
     else
-        sudo -u "$user" "$@"
+        sudo -u "$user" DBUS_SESSION_BUS_ADDRESS="$DAEMON_DBUS_ADDRESS" XDG_RUNTIME_DIR="$DAEMON_RUNTIME_DIR" "$@"
     fi
 }
 
@@ -51,15 +59,21 @@ install_config() {
     if [ ! -f "$CONFIG_FILE" ]; then
         touch "$CONFIG_FILE"
     fi
-    # The daemon runs as the desktop user, so the alarm file should be writable
-    # by that user.
+    # The daemon runs as the desktop user, so both the config directory and the
+    # alarm file must be writable by that user. Otherwise alarms fire but cannot
+    # be removed from the file afterwards.
     if [ -n "${SUDO_USER:-}" ]; then
+        chown "$SUDO_USER:$SUDO_USER" "$CONFIG_DIR"
         chown "$SUDO_USER:$SUDO_USER" "$CONFIG_FILE"
+        chmod 755 "$CONFIG_DIR"
         chmod 644 "$CONFIG_FILE"
     elif [ "$daemon_user" != "root" ]; then
+        chown "$daemon_user:$daemon_user" "$CONFIG_DIR"
         chown "$daemon_user:$daemon_user" "$CONFIG_FILE"
+        chmod 755 "$CONFIG_DIR"
         chmod 644 "$CONFIG_FILE"
     else
+        chmod 777 "$CONFIG_DIR"
         chmod 666 "$CONFIG_FILE"
     fi
 }
@@ -71,7 +85,25 @@ EOF
     chmod 644 /etc/profile.d/${SERVICE_NAME}.sh
 }
 
+# If an old system-wide service exists, stop and disable it so it does not fight
+# with the new per-user service.
+disable_legacy_system_service() {
+    if [ -f /etc/systemd/system/${SERVICE_NAME}.service ]; then
+        echo "note: stopping/disabling existing system-wide ${SERVICE_NAME}.service"
+        systemctl stop ${SERVICE_NAME} 2>/dev/null || true
+        systemctl disable ${SERVICE_NAME} 2>/dev/null || true
+    fi
+}
+
 DAEMON_USER=$(detect_daemon_user)
+DAEMON_UID=$(id -u "$DAEMON_USER" 2>/dev/null || true)
+if [ -z "$DAEMON_UID" ]; then
+    echo "error: cannot determine uid for user '$DAEMON_USER'" >&2
+    exit 1
+fi
+DAEMON_RUNTIME_DIR="/run/user/$DAEMON_UID"
+DAEMON_DBUS_ADDRESS="unix:path=$DAEMON_RUNTIME_DIR/bus"
+
 if [ "$DAEMON_USER" = "root" ]; then
     echo "warning: daemon will run as root. desktop notifications require the"
     echo "         user's D-Bus session bus and will likely fail. install with"
@@ -84,6 +116,7 @@ case "$TARGET" in
         install_bin
         install_config "$DAEMON_USER"
         install_env
+        disable_legacy_system_service
         # Install as a user service so it runs inside the desktop user's session
         # and can reach the D-Bus session bus used by the notification daemon.
         USER_SYSTEMD_DIR=$(getent passwd "$DAEMON_USER" | cut -d: -f6)/.config/systemd/user
