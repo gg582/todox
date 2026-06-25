@@ -108,7 +108,7 @@ static int cmd_add(int argc, char **argv) {
         file = argv[2];
         triple = argv[3];
     } else {
-        fprintf(stderr, "usage: %s add [<file>] \"<ts>%%<task>%%<comment>\"\n", argv[0]);
+        fprintf(stderr, "usage: %s add [<file>] \"<ts>%%%%<task>%%%%<comment>\"\n", argv[0]);
         return 1;
     }
 
