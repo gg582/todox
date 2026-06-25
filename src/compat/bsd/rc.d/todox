@@ -16,7 +16,7 @@ load_rc_config "$name"
 : ${todox_enable:="NO"}
 : ${todox_config:="/usr/local/etc/todox/alarm.txt"}
 
-todox_user="root"
+todox_user="TODOX_USER_PLACEHOLDER"
 command="/usr/local/bin/todox"
 command_args="--daemonize"
 pidfile="/var/run/todox.pid"

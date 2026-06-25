@@ -1,5 +1,6 @@
 #include <notify/notify.h>
 #include <dbus/dbus.h>
+#include <syslog.h>
 
 int todox_send_desktop_notification(const char *title, const char *body) {
     DBusError err;
@@ -12,9 +13,11 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     dbus_error_init(&err);
     conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
     if(dbus_error_is_set(&err)) {
+        syslog(LOG_ERR, "todox: failed to get dbus session bus: %s", err.message);
         dbus_error_free(&err);
     }
     if(conn == NULL) {
+        syslog(LOG_ERR, "todox: dbus connection is null (DBUS_SESSION_BUS_ADDRESS may be missing or invalid)");
         return -1;
     }
 
@@ -24,6 +27,7 @@ int todox_send_desktop_notification(const char *title, const char *body) {
         "org.freedesktop.Notifications",
         "Notify");
     if(msg == NULL) {
+        syslog(LOG_ERR, "todox: failed to create dbus Notify message");
         return -1;
     }
 
@@ -64,6 +68,7 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     dbus_message_unref(msg);
 
     if(dbus_error_is_set(&err)) {
+        syslog(LOG_ERR, "todox: dbus Notify call failed: %s", err.message);
         dbus_error_free(&err);
         if(reply != NULL) {
             dbus_message_unref(reply);
