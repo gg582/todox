@@ -22,15 +22,32 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
-  build-macos:
-    runs-on: macos-latest
+  build-freebsd:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
-        run: brew install cmake pkg-config dbus
-      - name: Configure
-        run: cmake -S . -B build
-      - name: Build
-        run: cmake --build build
-      - name: Test
-        run: ctest --test-dir build --output-on-failure
+      - name: Test in FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg install -y cmake pkgconf dbus
+          run: |
+            cmake -S . -B build
+            cmake --build build
+            ctest --test-dir build --output-on-failure
+
+  build-openbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test in OpenBSD
+        uses: vmactions/openbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg_add -I cmake pkgconf dbus
+          run: |
+            cmake -S . -B build
+            cmake --build build
+            ctest --test-dir build --output-on-failure
