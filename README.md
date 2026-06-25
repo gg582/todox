@@ -1,6 +1,32 @@
 # todox
 
-CLI alarm manager with optional desktop notification daemon.
+A small CLI alarm manager with a desktop-notification daemon.
+
+## Overview
+
+`todox` stores timestamped tasks in a plain text file and optionally runs a background daemon that wakes up and sends a desktop notification when an alarm is due. It is built in C with minimal dependencies and supports several init systems.
+
+## Features
+
+- Plain-text alarm storage (`YYYY-MM-DD HH:MM:SS +HHMM%%TASK%%COMMENT`).
+- Sorted alarm list kept in a fixed-size array.
+- Background notification daemon using D-Bus desktop notifications.
+- Install helpers for systemd (user service), OpenRC, Slackware, and BSD rc.d.
+- Portable UTC time conversion: uses `timegm()` on Linux and modern BSD systems.
+
+## Project layout
+
+```
+include/   Public headers
+src/       Implementation
+src/app/   CLI command handling and I/O
+src/compat/BSD compatibility helpers
+src/error/ Error reporting
+src/list/  Sorted fixed-array list
+src/notify/Notification daemon and D-Bus client
+src/time/  Time parsing and conversion
+tests/     Unit tests
+```
 
 ## Dependencies
 
@@ -8,45 +34,28 @@ CLI alarm manager with optional desktop notification daemon.
 - pkg-config
 - D-Bus development files
 
-### Debian / Ubuntu
+Install them by platform:
 
 ```bash
+# Debian / Ubuntu
 sudo apt-get install cmake pkg-config libdbus-1-dev
-```
 
-### Fedora / RHEL
-
-```bash
+# Fedora / RHEL
 sudo dnf install cmake pkgconfig dbus-devel
-```
 
-### Arch
-
-```bash
+# Arch
 sudo pacman -S cmake pkgconf dbus
-```
 
-### openSUSE
-
-```bash
+# openSUSE
 sudo zypper install cmake pkg-config dbus-1-devel
-```
 
-### Slackware
-
-```bash
+# Slackware
 sudo slackpkg install cmake pkg-config dbus
-```
 
-### FreeBSD
-
-```bash
+# FreeBSD
 sudo pkg install cmake pkgconf dbus
-```
 
-### OpenBSD
-
-```bash
+# OpenBSD
 doas pkg_add cmake pkgconf dbus
 ```
 
@@ -57,11 +66,11 @@ cmake -S . -B build
 cmake --build build
 ```
 
-The binary is produced at `build/todox`.
+The binary is written to `build/todox`.
 
 ## Install
 
-Install from the desktop user account (the one that should receive notifications):
+Run the installer from the desktop user account that should receive notifications:
 
 ```bash
 sudo ./install.sh systemd
@@ -73,15 +82,22 @@ sudo ./install.sh slackware
 sudo ./install.sh bsd
 ```
 
-`install.sh` copies `build/todox` to `/usr/local/bin/todox`, creates `/usr/local/etc/todox/alarm.txt`, installs the init script, enables the service, and starts it. The daemon is started as the installing user so it can reach the desktop user's D-Bus session bus for notifications.
+`install.sh` copies `build/todox` to `/usr/local/bin/todox`, creates `/usr/local/etc/todox/alarm.txt`, and installs the service file. After installation the service uses `TODOX_ALARM_FILE=/usr/local/etc/todox/alarm.txt`, so most commands do not need a file argument.
 
-The service runs with `TODOX_ALARM_FILE=/usr/local/etc/todox/alarm.txt` set, so after installation most commands do not need a file argument.
+> The notification daemon must run as the desktop user, not as root, because it sends notifications over the user's D-Bus session bus.
 
-**Note:** the notification daemon must run as the desktop user, not as root. Desktop notifications are sent over the user's D-Bus session bus, which is not available to a root-owned system daemon.
+### systemd user service
 
-## Alarm file format
+`install.sh systemd` installs a user service. It does not start the daemon automatically as root. Enable and start it as the desktop user:
 
-Each line is:
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now todox
+```
+
+## Usage
+
+### Alarm file format
 
 ```text
 YYYY-MM-DD HH:MM:SS +HHMM%%TASK%%COMMENT
@@ -100,63 +116,50 @@ Examples:
 21:00:00 +0900%%test title%%test comment
 ```
 
-## Usage
+### Commands
 
-### List alarms
+| Command | Description | Example |
+|---|---|---|
+| (none) | List alarms. | `todox` |
+| `add` | Add an alarm. | `todox add "2026-06-25 21:00:00 +0900%%task%%comment"` |
+| `remove` | Remove an alarm by task name. | `todox remove "task"` |
+| `--daemonize` | Run the notification daemon. | `todox --daemonize` |
+
+Commands accept an explicit alarm file or fall back to `TODOX_ALARM_FILE`:
 
 ```bash
 todox alarm.txt
-TODOX_ALARM_FILE=alarm.txt todox
+TODOX_ALARM_FILE=alarm.txt todox add "21:00:00 +0900%%task%%comment"
 ```
-
-### Add an alarm
-
-```bash
-todox add alarm.txt "1970-01-01 00:00:00 +0000%%test title%%test comment"
-TODOX_ALARM_FILE=alarm.txt todox add "1970-01-01 00:00:00 +0000%%test title%%test comment"
-
-# date may be omitted; time-only input uses today's date
-todox add "21:00:00 +0900%%test title%%test comment"
-```
-
-### Remove an alarm
-
-```bash
-todox remove alarm.txt "test title"
-TODOX_ALARM_FILE=alarm.txt todox remove "test title"
-```
-
-### Run notification daemon
-
-```bash
-todox --daemonize alarm.txt
-TODOX_ALARM_FILE=alarm.txt todox --daemonize
-```
-
-The daemon loads alarms, sleeps until the next future alarm, sends a desktop notification via D-Bus, removes past alarms from the file, and repeats. Run it from the desktop user session so it can access the user's D-Bus session bus.
 
 ## Service control
 
-If installed with systemd (user service):
+### systemd (user service)
 
 ```bash
 systemctl --user start|stop|restart|status todox
 ```
 
-If installed with openrc:
+### OpenRC
 
 ```bash
 sudo rc-service todox start|stop|restart
 ```
 
-If installed with slackware:
+### Slackware
 
 ```bash
 sudo /etc/rc.d/rc.todox start|stop|restart
 ```
 
-If installed with bsd:
+### BSD
 
 ```bash
 sudo service todox start|stop|restart
 ```
+
+## Technical notes
+
+- **D-Bus session model**: the daemon connects to the user's session bus. The systemd install path uses a non-privileged user service so the daemon inherits the correct D-Bus environment without requiring `sudo` workarounds.
+- **Time handling**: Linux uses `timegm()` directly; the BSD compatibility layer delegates to the libc `timegm()` provided by current FreeBSD, NetBSD, OpenBSD, and DragonFly systems instead of reimplementing leap-year arithmetic.
+- **Memory model**: error messages use a single-free lifespan; the alarm list is a fixed-size sorted array.

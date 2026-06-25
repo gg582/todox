@@ -1,6 +1,8 @@
 #include <notify/notify.h>
 #include <dbus/dbus.h>
 #include <syslog.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 int todox_send_desktop_notification(const char *title, const char *body) {
     DBusError err;
@@ -12,6 +14,26 @@ int todox_send_desktop_notification(const char *title, const char *body) {
 
     dbus_error_init(&err);
     conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
+
+    /* If the session bus address was stripped by sudo or another privilege
+     * boundary, derive it from the standard systemd user runtime directory.
+     * This keeps the daemon working when launched as a systemd --user service
+     * or from an otherwise clean environment.
+     */
+    if(conn == NULL && getenv("DBUS_SESSION_BUS_ADDRESS") == NULL) {
+        const char *runtime = getenv("XDG_RUNTIME_DIR");
+        if(runtime != NULL) {
+            char addr[512];
+            int n = snprintf(addr, sizeof(addr), "unix:path=%s/bus", runtime);
+            if(n > 0 && (size_t)n < sizeof(addr)) {
+                setenv("DBUS_SESSION_BUS_ADDRESS", addr, 1);
+                dbus_error_free(&err);
+                dbus_error_init(&err);
+                conn = dbus_bus_get(DBUS_BUS_SESSION, &err);
+            }
+        }
+    }
+
     if(dbus_error_is_set(&err)) {
         syslog(LOG_ERR, "todox: failed to get dbus session bus: %s", err.message);
         dbus_error_free(&err);
@@ -37,8 +59,6 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     const char *summary = title ? title : "todox";
     const char *notification_body = body ? body : "";
     dbus_int32_t expire_timeout = 0;
-    const char *urgency_key = "urgency";
-    dbus_int32_t urgency_value = 2;
 
     dbus_message_iter_init_append(msg, &args);
     dbus_message_iter_append_basic(&args, DBUS_TYPE_STRING, &app_name);
@@ -51,15 +71,6 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     dbus_message_iter_close_container(&args, &sub);
 
     dbus_message_iter_open_container(&args, DBUS_TYPE_ARRAY, "{sv}", &sub);
-    {
-        DBusMessageIter dict_entry, variant;
-        dbus_message_iter_open_container(&sub, DBUS_TYPE_DICT_ENTRY, NULL, &dict_entry);
-        dbus_message_iter_append_basic(&dict_entry, DBUS_TYPE_STRING, &urgency_key);
-        dbus_message_iter_open_container(&dict_entry, DBUS_TYPE_VARIANT, DBUS_TYPE_BYTE_AS_STRING, &variant);
-        dbus_message_iter_append_basic(&variant, DBUS_TYPE_BYTE, &urgency_value);
-        dbus_message_iter_close_container(&dict_entry, &variant);
-        dbus_message_iter_close_container(&sub, &dict_entry);
-    }
     dbus_message_iter_close_container(&args, &sub);
 
     dbus_message_iter_append_basic(&args, DBUS_TYPE_INT32, &expire_timeout);

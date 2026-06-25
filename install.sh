@@ -30,19 +30,6 @@ detect_daemon_user() {
     fi
 }
 
-# Run a command as the target user. If already running as that user, run directly.
-# For systemctl --user we must supply the D-Bus session bus address and runtime
-# directory, because sudo does not preserve them.
-run_as_user() {
-    local user=$1
-    shift
-    if [ "$(id -un)" = "$user" ]; then
-        DBUS_SESSION_BUS_ADDRESS="$DAEMON_DBUS_ADDRESS" XDG_RUNTIME_DIR="$DAEMON_RUNTIME_DIR" "$@"
-    else
-        sudo -u "$user" DBUS_SESSION_BUS_ADDRESS="$DAEMON_DBUS_ADDRESS" XDG_RUNTIME_DIR="$DAEMON_RUNTIME_DIR" "$@"
-    fi
-}
-
 install_bin() {
     mkdir -p "$BIN_DIR"
     if [ ! -f build/todox ]; then
@@ -101,8 +88,6 @@ if [ -z "$DAEMON_UID" ]; then
     echo "error: cannot determine uid for user '$DAEMON_USER'" >&2
     exit 1
 fi
-DAEMON_RUNTIME_DIR="/run/user/$DAEMON_UID"
-DAEMON_DBUS_ADDRESS="unix:path=$DAEMON_RUNTIME_DIR/bus"
 
 if [ "$DAEMON_USER" = "root" ]; then
     echo "warning: daemon will run as root. desktop notifications require the"
@@ -136,11 +121,11 @@ WantedBy=default.target
 EOF
         chown "$DAEMON_USER:$DAEMON_USER" "$USER_SYSTEMD_DIR"
         chown "$DAEMON_USER:$DAEMON_USER" "$USER_SYSTEMD_DIR/${SERVICE_NAME}.service"
-        run_as_user "$DAEMON_USER" systemctl --user daemon-reload
-        run_as_user "$DAEMON_USER" systemctl --user enable ${SERVICE_NAME}
-        run_as_user "$DAEMON_USER" systemctl --user start ${SERVICE_NAME}
-        echo "systemd user service installed and started for user '$DAEMON_USER'."
-        echo "use: systemctl --user status ${SERVICE_NAME}"
+        echo "systemd user service installed for user '$DAEMON_USER'."
+        echo "run the following commands as '$DAEMON_USER' to start it:"
+        echo "    systemctl --user daemon-reload"
+        echo "    systemctl --user enable --now ${SERVICE_NAME}"
+        echo "    systemctl --user status ${SERVICE_NAME}"
         ;;
 
     openrc)
