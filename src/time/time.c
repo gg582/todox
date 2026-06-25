@@ -51,11 +51,7 @@ time_t iso8601_to_time_t(const char *ts)
     }
 
     if(has_tz) {
-#ifdef __linux__
         t = timegm(&tm_time);
-#else
-        t = bsd_timegm(&tm_time);
-#endif
         if(t != (time_t)-1) {
             t -= parse_tz_offset(ts);
         }

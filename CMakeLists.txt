@@ -28,10 +28,6 @@ set(TODOX_SOURCES
     src/time/table.c
 )
 
-if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD|OpenBSD|NetBSD|DragonFly")
-    list(APPEND TODOX_SOURCES src/compat/bsd/time.c)
-endif()
-
 add_executable(todox ${TODOX_SOURCES})
 
 target_link_libraries(todox ${DBUS_LIBRARIES})
@@ -48,10 +44,6 @@ set(TODOX_TEST_SOURCES
     src/list/list.c
     src/time/time.c
 )
-
-if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD|OpenBSD|NetBSD|DragonFly")
-    list(APPEND TODOX_TEST_SOURCES src/compat/bsd/time.c)
-endif()
 
 add_executable(todox_test ${TODOX_TEST_SOURCES})
 target_link_libraries(todox_test ${DBUS_LIBRARIES})
