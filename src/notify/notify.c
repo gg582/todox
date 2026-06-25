@@ -8,6 +8,9 @@
 #include <string.h>
 #include <time.h>
 
+/* polling interval when no future alarm is pending */
+#define TODOX_NO_ALARM_POLL_INTERVAL_MS 10000
+
 void todox_msleep(long ms) {
     if(ms <= 0) {
         return;
@@ -42,6 +45,14 @@ static size_t find_next_alarm(todox_notify_process_t *proc, time_t now) {
         }
     }
     return proc->alarm_list.len;
+}
+
+static void reload_alarms(todox_notify_process_t *proc) {
+    if(proc->alarm_list.tasks != NULL) {
+        free(proc->alarm_list.tasks);
+    }
+    proc->alarm_list = todox_parse_config(proc->config_path);
+    proc->current_index = 0;
 }
 
 static void purge_past_alarms(todox_notify_process_t *proc, time_t now) {
@@ -90,9 +101,11 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
         size_t next_idx = find_next_alarm(proc, now);
 
         if(next_idx >= proc->alarm_list.len) {
-            /* state: no pending future alarms. leave the loop so a service
-             * manager can restart the process after the alarm list changes. */
-            break;
+            /* no pending future alarms. wait a short interval, then reload
+             * the config so newly added alarms are picked up. */
+            todox_msleep(TODOX_NO_ALARM_POLL_INTERVAL_MS);
+            reload_alarms(proc);
+            continue;
         }
 
         proc->current_index = next_idx;
