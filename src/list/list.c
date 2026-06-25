@@ -1,18 +1,6 @@
-#include <file/format.h>
+#include <list/list.h>
 #include <stdlib.h>
 #include <string.h>
-
-static int compare_by_ts(const void *a, const void *b) {
-    const todox_format_t *fa = (const todox_format_t *)a;
-    const todox_format_t *fb = (const todox_format_t *)b;
-    if(fa->ts < fb->ts) {
-        return -1;
-    }
-    if(fa->ts > fb->ts) {
-        return 1;
-    }
-    return 0;
-}
 
 /** @brief initializes a todox list.
   * @param[in] lst a pointer to a todox list.
@@ -22,7 +10,7 @@ void todox_task_init(todox_list *lst) {
     lst->len = 0U;
 }
 
-/** @brief pushes an item to a todox list.
+/** @brief pushes an item to a todox list, keeping it sorted by timestamp.
   * @param[in] lst a pointer to a todox list.
   * @param[in] itm an item to push
   */
@@ -31,9 +19,13 @@ void todox_task_push(todox_list *lst, todox_format_t itm)
     if(lst->len >= TODOX_ALARM_TABLE_MAX_ROWS) {
         return;
     }
-    lst->tasks[lst->len] = itm;
+    size_t pos = lst->len;
+    while(pos > 0 && lst->tasks[pos - 1].ts > itm.ts) {
+        lst->tasks[pos] = lst->tasks[pos - 1];
+        pos--;
+    }
+    lst->tasks[pos] = itm;
     lst->len++;
-    qsort(lst->tasks, lst->len, sizeof(todox_format_t), compare_by_ts);
 }
 
 /** @brief finds an item from a todox list.

@@ -22,12 +22,27 @@ install_config() {
     if [ ! -f "$CONFIG_FILE" ]; then
         touch "$CONFIG_FILE"
     fi
+    # Allow both the installing user (CLI) and the root-run daemon to write.
+    if [ -n "${SUDO_USER:-}" ]; then
+        chown "$SUDO_USER:$SUDO_USER" "$CONFIG_FILE"
+        chmod 644 "$CONFIG_FILE"
+    else
+        chmod 666 "$CONFIG_FILE"
+    fi
+}
+
+install_env() {
+    cat > /etc/profile.d/${SERVICE_NAME}.sh <<EOF
+export TODOX_ALARM_FILE="$CONFIG_FILE"
+EOF
+    chmod 644 /etc/profile.d/${SERVICE_NAME}.sh
 }
 
 case "$TARGET" in
     systemd)
         install_bin
         install_config
+        install_env
         cat > /etc/systemd/system/${SERVICE_NAME}.service <<EOF
 [Unit]
 Description=todox alarm daemon
@@ -51,6 +66,7 @@ EOF
     openrc)
         install_bin
         install_config
+        install_env
         cat > /etc/init.d/${SERVICE_NAME} <<'EOF'
 #!/sbin/openrc-run
 name="todox"
@@ -75,6 +91,7 @@ EOF
     slackware)
         install_bin
         install_config
+        install_env
         cat > /etc/rc.d/rc.${SERVICE_NAME} <<'EOF'
 #!/bin/sh
 # Start/stop/restart todox alarm daemon
@@ -120,8 +137,23 @@ EOF
         echo "slackware rc script installed and started."
         ;;
 
+    bsd)
+        install_bin
+        install_config
+        install_env
+        rc_script="/etc/rc.d/${SERVICE_NAME}"
+        cp "src/compat/bsd/rc.d/${SERVICE_NAME}" "$rc_script"
+        sed -i "s|/usr/local/etc/todox/alarm.txt|$CONFIG_FILE|g" "$rc_script"
+        chmod +x "$rc_script"
+        if ! grep -qE "^${SERVICE_NAME}_enable=" /etc/rc.conf; then
+            echo "${SERVICE_NAME}_enable=\"YES\"" >> /etc/rc.conf
+        fi
+        service ${SERVICE_NAME} start 2>/dev/null || "$rc_script" start
+        echo "bsd rc.d script installed and started."
+        ;;
+
     *)
-        echo "usage: $0 {systemd|openrc|slackware}"
+        echo "usage: $0 {systemd|openrc|slackware|bsd}"
         exit 1
         ;;
 esac

@@ -1,7 +1,9 @@
 #include <app/app.h>
 #include <app/io.h>
 #include <app/parse.h>
+#include <file/config.h>
 #include <file/format.h>
+#include <list/list.h>
 #include <notify/notify.h>
 #include <error/error.h>
 #include <stdio.h>
@@ -67,12 +69,15 @@ static int cmd_help(const char *progname) {
     printf("  if TODOX_ALARM_FILE is set, the [file] argument can be omitted.\n");
     printf("  install.sh sets TODOX_ALARM_FILE in the service, so after installation\n");
     printf("  most commands do not need a file path.\n");
+    printf("  date can be omitted from TS; time-only input is treated as today.\n");
+    printf("    e.g. \"21:00:00 +0900%%%%task%%%%comment\" uses today's date.\n");
     printf("\n");
     printf("examples:\n");
     printf("  %s alarm.txt\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s\n", progname);
     printf("  %s add alarm.txt \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s add \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
+    printf("  %s add \"21:00:00 +0900%%%%task%%%%comment\"       (today's date)\n", progname);
     printf("  %s remove alarm.txt \"test title\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s remove \"test title\"\n", progname);
     printf("  %s --daemonize alarm.txt\n", progname);
@@ -99,10 +104,7 @@ static int cmd_add(int argc, char **argv) {
     if(argc == 3) {
         file = get_alarm_file(0, NULL, 0);
         triple = argv[2];
-    } else if(argc >= 4 && is_triplet(argv[2])) {
-        file = get_alarm_file(0, NULL, 0);
-        triple = argv[2];
-    } else if(argc >= 4) {
+    } else if(argc == 4) {
         file = argv[2];
         triple = argv[3];
     } else {
@@ -129,7 +131,7 @@ static int cmd_remove(int argc, char **argv) {
     if(argc == 3) {
         file = get_alarm_file(0, NULL, 0);
         task = argv[2];
-    } else if(argc >= 4) {
+    } else if(argc == 4) {
         file = argv[2];
         task = argv[3];
     } else {
@@ -167,11 +169,6 @@ int app_run(int argc, char **argv) {
             return 1;
         }
         return run_daemon(argc, argv);
-    }
-
-    if(argc < 2 && getenv("TODOX_ALARM_FILE") == NULL) {
-        fprintf(stderr, "usage: %s [add|remove] [file] <args>\n", argv[0]);
-        return 1;
     }
 
     if(argc >= 2 && strcmp(argv[1], "add") == 0) {

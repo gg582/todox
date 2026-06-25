@@ -1,49 +1,10 @@
+#include <file/config.h>
 #include <file/format.h>
+#include <list/list.h>
+#include <app/parse.h>
 #include <error/error.h>
 #include <stdlib.h>
 #include <string.h>
-
-static void trim_right(char *s) {
-    size_t len = strlen(s);
-    while(len > 0 && (s[len - 1] == ' ' || s[len - 1] == '\t' || s[len - 1] == '\r' || s[len - 1] == '\n')) {
-        s[len - 1] = '\0';
-        len--;
-    }
-}
-
-static int parse_alarm_line(char *line, todox_format_t *out) {
-    trim_right(line);
-
-    char *sep1 = strstr(line, "%%");
-    if(sep1 == NULL) {
-        return -1;
-    }
-    *sep1 = '\0';
-    sep1 += 2;
-
-    char *sep2 = strstr(sep1, "%%");
-    if(sep2 == NULL) {
-        return -1;
-    }
-    *sep2 = '\0';
-    sep2 += 2;
-
-    trim_right(line);
-    trim_right(sep1);
-    trim_right(sep2);
-
-    out->ts = iso8601_to_time_t(line);
-    if(out->ts == (time_t)-1) {
-        return -1;
-    }
-
-    strncpy(out->task, sep1, TODOX_ALARM_TASK_MAX_LEN - 1);
-    out->task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
-    strncpy(out->comment, sep2, TODOX_ALARM_COMMENT_MAX_LEN - 1);
-    out->comment[TODOX_ALARM_COMMENT_MAX_LEN - 1] = '\0';
-
-    return 0;
-}
 
 /** @brief parse a config file.
   * @param config path to a config file.
@@ -56,7 +17,7 @@ todox_list todox_parse_config(const char *config) {
     FILE *config_file = fopen(config, "rt");
     if(config_file == NULL)
     {
-        todox_notify(TODOX_ERROR("failed to open config file", ERROR, TODOX_NO_CONFIG_FILE));
+        todox_notify(TODOX_ERROR("config file not found, starting with empty alarm list", DEBUG, TODOX_NO_CONFIG_FILE));
         return lst;
     }
 
@@ -67,7 +28,7 @@ todox_list todox_parse_config(const char *config) {
         strncpy(line, buffer, sizeof(line) - 1);
         line[sizeof(line) - 1] = '\0';
 
-        if(parse_alarm_line(line, &todo_itm) != 0) {
+        if(parse_triplet(line, &todo_itm) != 0) {
             continue;
         }
 

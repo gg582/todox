@@ -1,27 +1,26 @@
 #include <notify/notify.h>
+#include <file/config.h>
 #include <file/format.h>
+#include <list/list.h>
 #include <error/error.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
-#ifdef __linux__
-#include <unistd.h>
-#endif
-
 void todox_msleep(long ms) {
     if(ms <= 0) {
         return;
     }
-#ifdef __linux__
-    usleep((useconds_t)(ms * 1000));
-#else
+    /* nanosleep is used on all platforms. It is POSIX.1-2008 compliant,
+     * handles signal interruption correctly, and avoids the deprecated
+     * usleep() workaround that was previously Linux-specific. */
     struct timespec ts;
     ts.tv_sec = ms / 1000;
     ts.tv_nsec = (ms % 1000) * 1000000;
-    nanosleep(&ts, NULL);
-#endif
+    while(nanosleep(&ts, &ts) == -1) {
+        /* retry if interrupted by a signal */
+    }
 }
 
 static time_t get_current_time(void) {

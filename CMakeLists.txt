@@ -12,7 +12,10 @@ include_directories(${DBUS_INCLUDE_DIRS})
 link_directories(${DBUS_LIBRARY_DIRS})
 add_compile_options(${DBUS_CFLAGS_OTHER})
 
-add_executable(todox
+set(TODOX_DEFAULT_ALARM_FILE "/usr/local/etc/todox/alarm.txt")
+add_compile_definitions(TODOX_DEFAULT_ALARM_FILE="${TODOX_DEFAULT_ALARM_FILE}")
+
+set(TODOX_SOURCES
     src/main.c
     src/app/app.c
     src/app/parse.c
@@ -25,4 +28,31 @@ add_executable(todox
     src/time/table.c
 )
 
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD|OpenBSD|NetBSD|DragonFly")
+    list(APPEND TODOX_SOURCES src/compat/bsd/time.c)
+endif()
+
+add_executable(todox ${TODOX_SOURCES})
+
 target_link_libraries(todox ${DBUS_LIBRARIES})
+
+enable_testing()
+
+set(TODOX_TEST_SOURCES
+    tests/main.c
+    tests/test_list.c
+    tests/test_parse.c
+    tests/test_time.c
+    src/app/parse.c
+    src/error/error.c
+    src/list/list.c
+    src/time/time.c
+)
+
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD|OpenBSD|NetBSD|DragonFly")
+    list(APPEND TODOX_TEST_SOURCES src/compat/bsd/time.c)
+endif()
+
+add_executable(todox_test ${TODOX_TEST_SOURCES})
+target_link_libraries(todox_test ${DBUS_LIBRARIES})
+add_test(NAME todox_test COMMAND todox_test)

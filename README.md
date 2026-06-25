@@ -81,10 +81,17 @@ Each line is:
 YYYY-MM-DD HH:MM:SS +HHMM%%TASK%%COMMENT
 ```
 
-Example:
+The date may be omitted; a time-only timestamp is interpreted as today:
+
+```text
+HH:MM:SS +HHMM%%TASK%%COMMENT
+```
+
+Examples:
 
 ```text
 1970-01-01 00:00:00 +0000%%test title%%test comment
+21:00:00 +0900%%test title%%test comment
 ```
 
 ## Usage
@@ -101,6 +108,9 @@ TODOX_ALARM_FILE=alarm.txt todox
 ```bash
 todox add alarm.txt "1970-01-01 00:00:00 +0000%%test title%%test comment"
 TODOX_ALARM_FILE=alarm.txt todox add "1970-01-01 00:00:00 +0000%%test title%%test comment"
+
+# date may be omitted; time-only input uses today's date
+todox add "21:00:00 +0900%%test title%%test comment"
 ```
 
 ### Remove an alarm

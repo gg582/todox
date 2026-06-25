@@ -1,5 +1,6 @@
 #include <app/io.h>
 #include <file/format.h>
+#include <list/list.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,7 +13,7 @@ const char *get_alarm_file(int argc, char **argv, int idx) {
     if(env != NULL && env[0] != '\0') {
         return env;
     }
-    return "alarm.txt";
+    return TODOX_DEFAULT_ALARM_FILE;
 }
 
 void print_tasks(const todox_list *lst) {

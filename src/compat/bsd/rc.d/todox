@@ -1,0 +1,30 @@
+#!/bin/sh
+# BSD rc.d script for todox alarm daemon.
+# Install as /etc/rc.d/todox (FreeBSD/NetBSD) or /etc/rc.d/rc.todox (OpenBSD).
+
+# PROVIDE: todox
+# REQUIRE: NETWORKING
+# KEYWORD: shutdown
+
+. /etc/rc.subr
+
+name="todox"
+rcvar="todox_enable"
+
+load_rc_config "$name"
+
+: ${todox_enable:="NO"}
+: ${todox_config:="/usr/local/etc/todox/alarm.txt"}
+
+todox_user="root"
+command="/usr/local/bin/todox"
+command_args="--daemonize"
+pidfile="/var/run/todox.pid"
+start_precmd="todox_precmd"
+
+# On OpenBSD, proctitle may differ; adjust pidfile_cmd if needed.
+todox_precmd() {
+    export TODOX_ALARM_FILE="$todox_config"
+}
+
+run_rc_command "$1"

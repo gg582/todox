@@ -1,11 +1,17 @@
-#define _GNU_SOURCE
 #define _XOPEN_SOURCE 700
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
 
 #include <file/format.h>
 #include <error/error.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
+
+#ifndef __linux__
+#include <compat/bsd/time.h>
+#endif
 
 /**
   * @brief parses an ISO 8601 datetime string into a UTC time_t.
@@ -51,7 +57,11 @@ time_t iso8601_to_time_t(const char *ts)
     }
 
     if(has_tz) {
+#ifdef __linux__
         t = timegm(&tm_time);
+#else
+        t = bsd_timegm(&tm_time);
+#endif
         if(t != (time_t)-1) {
             t -= parse_tz_offset(ts);
         }

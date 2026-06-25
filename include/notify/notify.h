@@ -2,6 +2,7 @@
 #define __TODOX_NOTIFY_H__
 
 #include <file/format.h>
+#include <list/list.h>
 
 /** @struct todox_notify_process_t
   * @brief a daemon process that wakes up for future alarms.

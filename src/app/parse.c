@@ -2,6 +2,8 @@
 #include <file/format.h>
 #include <error/error.h>
 #include <string.h>
+#include <time.h>
+#include <ctype.h>
 
 static void trim(char *s) {
     size_t len = strlen(s);
@@ -9,6 +11,29 @@ static void trim(char *s) {
         s[len - 1] = '\0';
         len--;
     }
+}
+
+static int looks_like_time_only(const char *s) {
+    return isdigit((unsigned char)s[0]) && isdigit((unsigned char)s[1]) && s[2] == ':' &&
+           isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]) && s[5] == ':' &&
+           isdigit((unsigned char)s[6]) && isdigit((unsigned char)s[7]);
+}
+
+static void prepend_today(char *buf, size_t bufsize) {
+    time_t now = time(NULL);
+    struct tm *tm_now = localtime(&now);
+    char date_prefix[32] = {0};
+    if(tm_now == NULL) {
+        return;
+    }
+    strftime(date_prefix, sizeof(date_prefix), "%Y-%m-%d ", tm_now);
+    size_t prefix_len = strlen(date_prefix);
+    size_t buf_len = strlen(buf);
+    if(prefix_len + buf_len + 1 > bufsize) {
+        return;
+    }
+    memmove(buf + prefix_len, buf, buf_len + 1);
+    memcpy(buf, date_prefix, prefix_len);
 }
 
 int is_triplet(const char *s) {
@@ -24,6 +49,10 @@ int parse_triplet(const char *s, todox_format_t *out) {
     strncpy(buf, s, sizeof(buf) - 1);
     buf[sizeof(buf) - 1] = '\0';
     trim(buf);
+
+    if(looks_like_time_only(buf)) {
+        prepend_today(buf, sizeof(buf));
+    }
 
     char *p1 = strstr(buf, "%%");
     if(p1 == NULL) {
