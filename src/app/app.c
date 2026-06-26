@@ -64,7 +64,7 @@ static int cmd_help(const char *progname) {
     printf("  add [file] \"TS%%%%TASK%%%%COMMENT\"  add an alarm\n");
     printf("  add [file] \"TS%%%%TASK%%%%COMMENT%%%%repeat\"\n");
     printf("                              add a weekly repeating alarm\n");
-    printf("  add [file] \"DAY%%%%TASK%%%%COMMENT\"  add a weekly alarm on DAY\n");
+    printf("  add [file] \"DAY%%%%TIME%%%%TASK%%%%COMMENT\"  add a weekly alarm on DAY at TIME\n");
     printf("  remove [file] \"TASK\"            remove an alarm\n");
     printf("  --daemonize [file]            run notification daemon in background\n");
     printf("\n");
@@ -76,6 +76,7 @@ static int cmd_help(const char *progname) {
     printf("    e.g. \"21:00:00 +0900%%%%task%%%%comment\" uses today's date.\n");
     printf("  DAY is a weekday expression: mon, tue, wed, thu, fri, sat, sun,\n");
     printf("    a range such as mon-fri, or a list such as mon:wed:fri.\n");
+    printf("  TIME is a time of day with an optional timezone: HH:MM:SS [+|-]HHMM.\n");
     printf("  alarms created with DAY or the %%%%repeat token fire every week.\n");
     printf("  the daemon advances repeating alarms by one week after they fire.\n");
     printf("\n");
@@ -85,8 +86,8 @@ static int cmd_help(const char *progname) {
     printf("  %s add alarm.txt \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s add \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
     printf("  %s add \"21:00:00 +0900%%%%task%%%%comment\"       (today's date)\n", progname);
-    printf("  %s add \"mon-fri%%%%standup%%%%daily sync\"        (weekday alarm)\n", progname);
-    printf("  %s add \"mon:wed:fri%%%%gym%%%%workout\"          (selected weekdays)\n", progname);
+    printf("  %s add \"mon-fri%%%%09:00:00 +0900%%%%standup%%%%daily sync\"  (weekday alarm)\n", progname);
+    printf("  %s add \"mon:wed:fri%%%%21:00:00 +0900%%%%gym%%%%workout\"        (selected weekdays)\n", progname);
     printf("  %s add \"09:00:00 +0900%%%%report%%%%weekly%%%%repeat\"  (weekly repeat)\n", progname);
     printf("  %s remove alarm.txt \"test title\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s remove \"test title\"\n", progname);

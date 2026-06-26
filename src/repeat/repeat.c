@@ -1,13 +1,17 @@
 #define _XOPEN_SOURCE 700
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
 
 #include <repeat/repeat.h>
 #include <string.h>
 #include <strings.h>
 #include <time.h>
+#include <ctype.h>
 
-#define TODOX_REPEAT_DEFAULT_HOUR 9
-#define TODOX_REPEAT_DEFAULT_MIN  0
-#define TODOX_REPEAT_DEFAULT_SEC  0
+#ifndef __linux__
+#include <compat/bsd/time.h>
+#endif
 
 static void trim(char *s) {
     size_t len = strlen(s);
@@ -85,17 +89,65 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
     return 0;
 }
 
-/** @brief computes the next occurrence of a weekday at a fixed local time. */
-static time_t next_weekday_timestamp(int wday, int hour, int min, int sec) {
+/** @brief parses a timezone offset of the form +HHMM or -HHMM into seconds. */
+static int parse_tz_offset(const char *s) {
+    size_t len = strlen(s);
+    if(len < 5) {
+        return 0;
+    }
+    const char *tz = s + len - 5;
+    if((tz[0] == '+' || tz[0] == '-') &&
+       isdigit((unsigned char)tz[1]) && isdigit((unsigned char)tz[2]) &&
+       isdigit((unsigned char)tz[3]) && isdigit((unsigned char)tz[4])) {
+        int sign = (tz[0] == '+') ? 1 : -1;
+        int hours = (tz[1] - '0') * 10 + (tz[2] - '0');
+        int mins  = (tz[3] - '0') * 10 + (tz[4] - '0');
+        return sign * (hours * 3600 + mins * 60);
+    }
+    return 0;
+}
+
+/** @brief parses a time field as HH:MM:SS with an optional +HHMM/-HHMM offset. */
+static int parse_time_field(const char *s, int *hour, int *min, int *sec, int *tz_offset) {
+    char buf[64];
+    strncpy(buf, s, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    trim(buf);
+
+    if(strlen(buf) == 0) {
+        return -1;
+    }
+
+    struct tm tm_time = {0};
+    if(strptime(buf, "%H:%M:%S %z", &tm_time) != NULL) {
+        *hour = tm_time.tm_hour;
+        *min = tm_time.tm_min;
+        *sec = tm_time.tm_sec;
+        *tz_offset = parse_tz_offset(buf);
+        return 0;
+    }
+    if(strptime(buf, "%H:%M:%S", &tm_time) != NULL) {
+        *hour = tm_time.tm_hour;
+        *min = tm_time.tm_min;
+        *sec = tm_time.tm_sec;
+        *tz_offset = 0;
+        return 0;
+    }
+    return -1;
+}
+
+/** @brief computes the next occurrence of a weekday at the given time in a timezone-aware way. */
+static time_t next_weekday_timestamp(int wday, int hour, int min, int sec, int tz_offset) {
     time_t now = time(NULL);
+    time_t now_in_tz = now + tz_offset;
     struct tm tm_now;
-    localtime_r(&now, &tm_now);
+    gmtime_r(&now_in_tz, &tm_now);
 
     struct tm target = tm_now;
     target.tm_hour = hour;
     target.tm_min = min;
     target.tm_sec = sec;
-    target.tm_isdst = -1;
+    target.tm_isdst = 0;
 
     int delta = (wday - tm_now.tm_wday + 7) % 7;
     if(delta == 0 && (tm_now.tm_hour > hour ||
@@ -104,7 +156,18 @@ static time_t next_weekday_timestamp(int wday, int hour, int min, int sec) {
         delta = 7;
     }
     target.tm_mday += delta;
-    return mktime(&target);
+    return timegm(&target) - tz_offset;
+}
+
+/** @brief counts how many '%%' separated fields are in a string. */
+static size_t count_fields(const char *s) {
+    size_t count = 1;
+    const char *p = s;
+    while((p = strstr(p, "%%")) != NULL) {
+        count++;
+        p += 2;
+    }
+    return count;
 }
 
 int is_weekday_expr(const char *s) {
@@ -112,6 +175,10 @@ int is_weekday_expr(const char *s) {
     strncpy(buf, s, sizeof(buf) - 1);
     buf[sizeof(buf) - 1] = '\0';
     trim(buf);
+
+    if(count_fields(buf) < 4) {
+        return 0;
+    }
 
     char *sep = strstr(buf, "%%");
     if(sep != NULL) {
@@ -132,6 +199,10 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     buf[sizeof(buf) - 1] = '\0';
     trim(buf);
 
+    if(count_fields(buf) < 4) {
+        return -1;
+    }
+
     char *sep = strstr(buf, "%%");
     if(sep == NULL) {
         return -1;
@@ -140,16 +211,30 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     const char *expr = buf;
     char *rest = sep + 2;
 
-    char *task_sep = strstr(rest, "%%");
+    char *time_sep = strstr(rest, "%%");
+    if(time_sep == NULL) {
+        return -1;
+    }
+    *time_sep = '\0';
+    char *time_field = rest;
+    char *task_comment = time_sep + 2;
+
+    char *task_sep = strstr(task_comment, "%%");
     if(task_sep == NULL) {
         return -1;
     }
     *task_sep = '\0';
-    char *task = rest;
+    char *task = task_comment;
     char *comment = task_sep + 2;
 
+    trim(time_field);
     trim(task);
     trim(comment);
+
+    int hour, min, sec, tz_offset;
+    if(parse_time_field(time_field, &hour, &min, &sec, &tz_offset) != 0) {
+        return -1;
+    }
 
     int wdays[7];
     size_t count = 0;
@@ -158,7 +243,7 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     }
 
     for(size_t i = 0; i < count; i++) {
-        out[i].ts = next_weekday_timestamp(wdays[i], TODOX_REPEAT_DEFAULT_HOUR, TODOX_REPEAT_DEFAULT_MIN, TODOX_REPEAT_DEFAULT_SEC);
+        out[i].ts = next_weekday_timestamp(wdays[i], hour, min, sec, tz_offset);
         out[i].repeat = 1;
         strncpy(out[i].task, task, TODOX_ALARM_TASK_MAX_LEN - 1);
         out[i].task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';

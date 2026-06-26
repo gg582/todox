@@ -116,6 +116,24 @@ Examples:
 21:00:00 +0900%%test title%%test comment
 ```
 
+### Weekly alarms
+
+Weekday alarms repeat every week and use four fields:
+
+```text
+DAY%%TIME%%TASK%%COMMENT
+```
+
+`DAY` is a single weekday (`mon`), a range (`mon-fri`), or a list (`mon:wed:fri`).
+`TIME` is `HH:MM:SS` with an optional timezone offset such as `+0900`.
+
+Examples:
+
+```text
+mon-fri%%21:00:00 +0900%%gym%%workout
+mon:wed:fri%%09:00:00 +0900%%standup%%daily sync
+```
+
 ### Commands
 
 | Command | Description | Example |
