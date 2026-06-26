@@ -37,4 +37,11 @@ unsigned todox_task_find(todox_list *lst, const char *task);
   */
 const char *todox_task_remove(todox_list *lst, const char *task);
 
+/** @brief removes all items matching a task name from a todox list.
+  * @param[in] lst a pointer to a todox list.
+  * @param[in] task a task name to remove.
+  * @return the number of removed items.
+  */
+size_t todox_task_remove_all(todox_list *lst, const char *task);
+
 #endif

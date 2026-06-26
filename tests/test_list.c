@@ -57,8 +57,36 @@ TEST(list_find_and_remove) {
     free(lst.tasks);
 }
 
+TEST(list_remove_all) {
+    todox_list lst;
+    todox_task_init(&lst);
+
+    todox_format_t a = {.ts = 100, .task = "alpha", .comment = ""};
+    todox_format_t b1 = {.ts = 200, .task = "beta", .comment = ""};
+    todox_format_t b2 = {.ts = 250, .task = "beta", .comment = ""};
+    todox_format_t c = {.ts = 300, .task = "gamma", .comment = ""};
+
+    todox_task_push(&lst, a);
+    todox_task_push(&lst, b1);
+    todox_task_push(&lst, b2);
+    todox_task_push(&lst, c);
+
+    size_t removed = todox_task_remove_all(&lst, "beta");
+    ASSERT_EQ_INT(2U, (unsigned)removed);
+    ASSERT_EQ_INT(2U, (unsigned)lst.len);
+    ASSERT_EQ_INT((unsigned)-1, todox_task_find(&lst, "beta"));
+    ASSERT_EQ_STR("alpha", lst.tasks[0].task);
+    ASSERT_EQ_STR("gamma", lst.tasks[1].task);
+
+    removed = todox_task_remove_all(&lst, "beta");
+    ASSERT_EQ_INT(0U, (unsigned)removed);
+
+    free(lst.tasks);
+}
+
 void run_list_tests(void) {
     RUN_TEST(list_init_empty);
     RUN_TEST(list_push_sorted);
     RUN_TEST(list_find_and_remove);
+    RUN_TEST(list_remove_all);
 }

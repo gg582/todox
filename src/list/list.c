@@ -36,14 +36,35 @@ unsigned todox_task_find(todox_list *lst, const char *task) {
 /** @brief removes an item from a todox list (implementation). */
 const char *todox_task_remove(todox_list *lst, const char *task)
 {
+    static char removed_task[TODOX_ALARM_TASK_MAX_LEN];
     unsigned idx = todox_task_find(lst, task);
     if(idx == (unsigned)-1) {
         return NULL;
     }
-    const char *removed = lst->tasks[idx].task;
+    strncpy(removed_task, lst->tasks[idx].task, TODOX_ALARM_TASK_MAX_LEN - 1);
+    removed_task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
     for(size_t i = idx; i + 1 < lst->len; i++) {
         lst->tasks[i] = lst->tasks[i + 1];
     }
     lst->len--;
+    return removed_task;
+}
+
+/** @brief removes all items matching a task name from a todox list (implementation). */
+size_t todox_task_remove_all(todox_list *lst, const char *task)
+{
+    size_t removed = 0;
+    size_t i = 0;
+    while(i < lst->len) {
+        if(strncmp(lst->tasks[i].task, task, TODOX_ALARM_TASK_MAX_LEN) == 0) {
+            for(size_t j = i; j + 1 < lst->len; j++) {
+                lst->tasks[j] = lst->tasks[j + 1];
+            }
+            lst->len--;
+            removed++;
+        } else {
+            i++;
+        }
+    }
     return removed;
 }

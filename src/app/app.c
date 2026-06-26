@@ -114,6 +114,19 @@ static int is_duplicate(const todox_list *lst, const char *task) {
     return todox_task_find((todox_list *)lst, task) != (unsigned)-1;
 }
 
+/** @brief checks whether a non-repeating task name already exists. */
+static int is_duplicate_non_repeat(const todox_list *lst, const char *task) {
+    for(size_t idx = 0U; idx < lst->len; idx++) {
+        if(lst->tasks[idx].repeat) {
+            continue;
+        }
+        if(strncmp(lst->tasks[idx].task, task, TODOX_ALARM_TASK_MAX_LEN) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int cmd_add(int argc, char **argv) {
     const char *file;
     const char *triple;
@@ -137,7 +150,7 @@ static int cmd_add(int argc, char **argv) {
             free(lst.tasks);
             return 1;
         }
-        if(is_duplicate(&lst, items[0].task)) {
+        if(is_duplicate_non_repeat(&lst, items[0].task)) {
             fprintf(stderr, "duplicate task name: %s\n", items[0].task);
             free(lst.tasks);
             return 1;
@@ -182,7 +195,7 @@ static int cmd_remove(int argc, char **argv) {
     }
 
     todox_list lst = todox_parse_config(file);
-    if(todox_task_remove(&lst, task) == NULL) {
+    if(todox_task_remove_all(&lst, task) == 0) {
         fprintf(stderr, "task not found: %s\n", task);
         free(lst.tasks);
         return 1;
