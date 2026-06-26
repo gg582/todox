@@ -14,8 +14,7 @@
 #endif
 
 /** @brief tries parsing a datetime string without timezone. */
-static inline char *try_convert_without_tz(const char *s, struct tm *tm_time)
-{
+static inline char *try_convert_without_tz(const char *s, struct tm *tm_time) {
     return strptime(s, TODOX_TIME_COMPAT_FORMAT, tm_time);
 }
 
@@ -25,20 +24,19 @@ static int parse_tz_offset(const char *s) {
         return 0;
     }
     const char *tz = s + len - 5;
-    if((tz[0] == '+' || tz[0] == '-') &&
-       isdigit((unsigned char)tz[1]) && isdigit((unsigned char)tz[2]) &&
-       isdigit((unsigned char)tz[3]) && isdigit((unsigned char)tz[4])) {
+    if((tz[0] == '+' || tz[0] == '-') && isdigit((unsigned char)tz[1]) &&
+       isdigit((unsigned char)tz[2]) && isdigit((unsigned char)tz[3]) &&
+       isdigit((unsigned char)tz[4])) {
         int sign = (tz[0] == '+') ? 1 : -1;
         int hours = (tz[1] - '0') * 10 + (tz[2] - '0');
-        int mins  = (tz[3] - '0') * 10 + (tz[4] - '0');
+        int mins = (tz[3] - '0') * 10 + (tz[4] - '0');
         return sign * (hours * 3600 + mins * 60);
     }
     return 0;
 }
 
 /** @brief parses an ISO 8601 datetime string into a time_t (implementation). */
-time_t iso8601_to_time_t(const char *ts)
-{
+time_t iso8601_to_time_t(const char *ts) {
     struct tm tm_time = {0};
     time_t t = (time_t)-1;
     int has_tz = 0;
@@ -60,7 +58,8 @@ time_t iso8601_to_time_t(const char *ts)
     }
 
     if(t == (time_t)-1) {
-        todox_notify(TODOX_ERROR("failed to convert into posix timestamp", WARN, TODOX_WRONG_TIMESTAMP));
+        todox_notify(
+            TODOX_ERROR("failed to convert into posix timestamp", WARN, TODOX_WRONG_TIMESTAMP));
     }
     return t;
 }

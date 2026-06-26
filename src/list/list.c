@@ -9,8 +9,7 @@ void todox_task_init(todox_list *lst) {
 }
 
 /** @brief pushes an item to a todox list, keeping it sorted by timestamp (implementation). */
-void todox_task_push(todox_list *lst, todox_format_t itm)
-{
+void todox_task_push(todox_list *lst, todox_format_t itm) {
     if(lst->len >= TODOX_ALARM_TABLE_MAX_ROWS) {
         return;
     }
@@ -34,8 +33,7 @@ unsigned todox_task_find(todox_list *lst, const char *task) {
 }
 
 /** @brief removes an item from a todox list (implementation). */
-const char *todox_task_remove(todox_list *lst, const char *task)
-{
+const char *todox_task_remove(todox_list *lst, const char *task) {
     static char removed_task[TODOX_ALARM_TASK_MAX_LEN];
     unsigned idx = todox_task_find(lst, task);
     if(idx == (unsigned)-1) {
@@ -51,8 +49,7 @@ const char *todox_task_remove(todox_list *lst, const char *task)
 }
 
 /** @brief removes all items matching a task name from a todox list (implementation). */
-size_t todox_task_remove_all(todox_list *lst, const char *task)
-{
+size_t todox_task_remove_all(todox_list *lst, const char *task) {
     size_t removed = 0;
     size_t i = 0;
     while(i < lst->len) {

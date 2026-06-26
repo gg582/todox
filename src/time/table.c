@@ -7,17 +7,17 @@
 #include <string.h>
 
 /** @brief parse a config file.
-  * @param config path to a config file.
-  * @return todox_list
-  */
+ * @param config path to a config file.
+ * @return todox_list
+ */
 todox_list todox_parse_config(const char *config) {
     todox_list lst;
     todox_task_init(&lst);
 
     FILE *config_file = fopen(config, "rt");
-    if(config_file == NULL)
-    {
-        todox_notify(TODOX_ERROR("config file not found, starting with empty alarm list", DEBUG, TODOX_NO_CONFIG_FILE));
+    if(config_file == NULL) {
+        todox_notify(TODOX_ERROR("config file not found, starting with empty alarm list", DEBUG,
+                                 TODOX_NO_CONFIG_FILE));
         return lst;
     }
 
@@ -40,14 +40,15 @@ todox_list todox_parse_config(const char *config) {
 }
 
 /** @brief write a todox list to a config file.
-  * @param config path to a config file.
-  * @param lst a pointer to a todox list.
-  * @return 0 on success, -1 on failure.
-  */
+ * @param config path to a config file.
+ * @param lst a pointer to a todox list.
+ * @return 0 on success, -1 on failure.
+ */
 int todox_write_config(const char *config, const todox_list *lst) {
     FILE *config_file = fopen(config, "wt");
     if(config_file == NULL) {
-        todox_notify(TODOX_ERROR("failed to open config file for writing", ERROR, TODOX_NO_CONFIG_FILE));
+        todox_notify(
+            TODOX_ERROR("failed to open config file for writing", ERROR, TODOX_NO_CONFIG_FILE));
         return -1;
     }
 

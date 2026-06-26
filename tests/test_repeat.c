@@ -9,13 +9,9 @@ TEST(weekday_expr_single) {
     ASSERT(is_weekday_expr("sun%%21:00:00 +0900%%task%%comment"));
 }
 
-TEST(weekday_expr_range) {
-    ASSERT(is_weekday_expr("mon-fri%%21:00:00 +0900%%task%%comment"));
-}
+TEST(weekday_expr_range) { ASSERT(is_weekday_expr("mon-fri%%21:00:00 +0900%%task%%comment")); }
 
-TEST(weekday_expr_list) {
-    ASSERT(is_weekday_expr("mon:wed:fri%%21:00:00 +0900%%task%%comment"));
-}
+TEST(weekday_expr_list) { ASSERT(is_weekday_expr("mon:wed:fri%%21:00:00 +0900%%task%%comment")); }
 
 TEST(weekday_expr_negative) {
     ASSERT(!is_weekday_expr("mon%%task%%comment"));

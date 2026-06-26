@@ -16,12 +16,12 @@
 #include <fcntl.h>
 
 /** @brief detaches the process into a background daemon.
-  * @details performs the standard double-fork, setsid, umask(0), and
-  *          redirects stdin/stdout/stderr to /dev/null. chdir("/") is
-  *          intentionally omitted so that relative alarm file paths remain
-  *          valid after daemonization.
-  * @return 0 on success, -1 on failure.
-  */
+ * @details performs the standard double-fork, setsid, umask(0), and
+ *          redirects stdin/stdout/stderr to /dev/null. chdir("/") is
+ *          intentionally omitted so that relative alarm file paths remain
+ *          valid after daemonization.
+ * @return 0 on success, -1 on failure.
+ */
 static int daemonize(void) {
     pid_t pid = fork();
     if(pid < 0) {
@@ -83,12 +83,19 @@ static int cmd_help(const char *progname) {
     printf("examples:\n");
     printf("  %s alarm.txt\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s\n", progname);
-    printf("  %s add alarm.txt \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
-    printf("  TODOX_ALARM_FILE=alarm.txt %s add \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
+    printf("  %s add alarm.txt \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n",
+           progname);
+    printf("  TODOX_ALARM_FILE=alarm.txt %s add \"1970-01-01 00:00:00 +0000%%%%test title%%%%test "
+           "comment\"\n",
+           progname);
     printf("  %s add \"21:00:00 +0900%%%%task%%%%comment\"       (today's date)\n", progname);
-    printf("  %s add \"mon-fri%%%%09:00:00 +0900%%%%standup%%%%daily sync\"  (weekday alarm)\n", progname);
-    printf("  %s add \"mon:wed:fri%%%%21:00:00 +0900%%%%gym%%%%workout\"        (selected weekdays)\n", progname);
-    printf("  %s add \"09:00:00 +0900%%%%report%%%%weekly%%%%repeat\"  (weekly repeat)\n", progname);
+    printf("  %s add \"mon-fri%%%%09:00:00 +0900%%%%standup%%%%daily sync\"  (weekday alarm)\n",
+           progname);
+    printf(
+        "  %s add \"mon:wed:fri%%%%21:00:00 +0900%%%%gym%%%%workout\"        (selected weekdays)\n",
+        progname);
+    printf("  %s add \"09:00:00 +0900%%%%report%%%%weekly%%%%repeat\"  (weekly repeat)\n",
+           progname);
     printf("  %s remove alarm.txt \"test title\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s remove \"test title\"\n", progname);
     printf("  %s --daemonize alarm.txt\n", progname);

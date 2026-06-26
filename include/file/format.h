@@ -14,8 +14,8 @@
 #define TODOX_ALARM_COMMENT_MAX_LEN 256
 
 /** @struct todox_format_t
-  * @brief  a data format of todolist.
-  */
+ * @brief  a data format of todolist.
+ */
 typedef struct __todox_format_t {
     /// unix timestamp
     time_t ts;
@@ -28,9 +28,9 @@ typedef struct __todox_format_t {
 } todox_format_t;
 
 /** @brief converts an ISO 8601 datetime string to time_t.
-  * @param[in] ts an ISO 8601 datetime string.
-  * @return a unix timestamp, or (time_t)-1 on failure.
-  */
+ * @param[in] ts an ISO 8601 datetime string.
+ * @return a unix timestamp, or (time_t)-1 on failure.
+ */
 time_t iso8601_to_time_t(const char *ts);
 
 #endif

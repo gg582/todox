@@ -14,22 +14,38 @@
 #endif
 
 static void trim(char *s) {
+    char *start = s;
+
+    while(*start != '\0' && isspace((unsigned char)*start)) {
+        start++;
+    }
+
+    if(start != s) {
+        memmove(s, start, strlen(start) + 1);
+    }
+
     size_t len = strlen(s);
-    while(len > 0 && (s[len - 1] == ' ' || s[len - 1] == '\t' || s[len - 1] == '\r' || s[len - 1] == '\n')) {
-        s[len - 1] = '\0';
-        len--;
+    while(len > 0 && isspace((unsigned char)s[len - 1])) {
+        s[--len] = '\0';
     }
 }
 
 /** @brief converts a weekday abbreviation to a tm_wday value. */
 static int parse_single_wday(const char *s) {
-    if(strcasecmp(s, "mon") == 0) return 1;
-    if(strcasecmp(s, "tue") == 0) return 2;
-    if(strcasecmp(s, "wed") == 0) return 3;
-    if(strcasecmp(s, "thu") == 0) return 4;
-    if(strcasecmp(s, "fri") == 0) return 5;
-    if(strcasecmp(s, "sat") == 0) return 6;
-    if(strcasecmp(s, "sun") == 0) return 0;
+    if(strcasecmp(s, "mon") == 0)
+        return 1;
+    if(strcasecmp(s, "tue") == 0)
+        return 2;
+    if(strcasecmp(s, "wed") == 0)
+        return 3;
+    if(strcasecmp(s, "thu") == 0)
+        return 4;
+    if(strcasecmp(s, "fri") == 0)
+        return 5;
+    if(strcasecmp(s, "sat") == 0)
+        return 6;
+    if(strcasecmp(s, "sun") == 0)
+        return 0;
     return -1;
 }
 
@@ -96,12 +112,12 @@ static int parse_tz_offset(const char *s) {
         return 0;
     }
     const char *tz = s + len - 5;
-    if((tz[0] == '+' || tz[0] == '-') &&
-       isdigit((unsigned char)tz[1]) && isdigit((unsigned char)tz[2]) &&
-       isdigit((unsigned char)tz[3]) && isdigit((unsigned char)tz[4])) {
+    if((tz[0] == '+' || tz[0] == '-') && isdigit((unsigned char)tz[1]) &&
+       isdigit((unsigned char)tz[2]) && isdigit((unsigned char)tz[3]) &&
+       isdigit((unsigned char)tz[4])) {
         int sign = (tz[0] == '+') ? 1 : -1;
         int hours = (tz[1] - '0') * 10 + (tz[2] - '0');
-        int mins  = (tz[3] - '0') * 10 + (tz[4] - '0');
+        int mins = (tz[3] - '0') * 10 + (tz[4] - '0');
         return sign * (hours * 3600 + mins * 60);
     }
     return 0;
@@ -150,8 +166,7 @@ static time_t next_weekday_timestamp(int wday, int hour, int min, int sec, int t
     target.tm_isdst = 0;
 
     int delta = (wday - tm_now.tm_wday + 7) % 7;
-    if(delta == 0 && (tm_now.tm_hour > hour ||
-                      (tm_now.tm_hour == hour && tm_now.tm_min > min) ||
+    if(delta == 0 && (tm_now.tm_hour > hour || (tm_now.tm_hour == hour && tm_now.tm_min > min) ||
                       (tm_now.tm_hour == hour && tm_now.tm_min == min && tm_now.tm_sec >= sec))) {
         delta = 7;
     }

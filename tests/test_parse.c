@@ -42,13 +42,9 @@ TEST(parse_full_timestamp_with_repeat) {
     ASSERT_EQ_INT(1, itm.repeat);
 }
 
-TEST(is_triplet_positive) {
-    ASSERT(is_triplet("a%%b%%c"));
-}
+TEST(is_triplet_positive) { ASSERT(is_triplet("a%%b%%c")); }
 
-TEST(is_triplet_negative) {
-    ASSERT(!is_triplet("a%%b"));
-}
+TEST(is_triplet_negative) { ASSERT(!is_triplet("a%%b")); }
 
 void run_parse_tests(void) {
     RUN_TEST(parse_full_timestamp_with_tz);

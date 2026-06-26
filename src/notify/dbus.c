@@ -39,15 +39,15 @@ int todox_send_desktop_notification(const char *title, const char *body) {
         dbus_error_free(&err);
     }
     if(conn == NULL) {
-        syslog(LOG_ERR, "todox: dbus connection is null (DBUS_SESSION_BUS_ADDRESS may be missing or invalid)");
+        syslog(
+            LOG_ERR,
+            "todox: dbus connection is null (DBUS_SESSION_BUS_ADDRESS may be missing or invalid)");
         return -1;
     }
 
-    msg = dbus_message_new_method_call(
-        "org.freedesktop.Notifications",
-        "/org/freedesktop/Notifications",
-        "org.freedesktop.Notifications",
-        "Notify");
+    msg = dbus_message_new_method_call("org.freedesktop.Notifications",
+                                       "/org/freedesktop/Notifications",
+                                       "org.freedesktop.Notifications", "Notify");
     if(msg == NULL) {
         syslog(LOG_ERR, "todox: failed to create dbus Notify message");
         return -1;
