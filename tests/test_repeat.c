@@ -83,6 +83,26 @@ TEST(next_weekly_occurrence) {
     ASSERT(next > base);
 }
 
+TEST(advance_repeat_to_future_once) {
+    time_t base = iso8601_to_time_t("2026-06-25 21:00:00 +0900");
+    time_t now = iso8601_to_time_t("2026-06-26 21:00:00 +0900");
+    ASSERT(base != (time_t)-1);
+    ASSERT(now != (time_t)-1);
+    time_t next = todox_advance_repeat_to_future(base, now);
+    ASSERT(next > now);
+    time_t expected = todox_next_weekly_occurrence(base);
+    ASSERT_EQ_INT((int)expected, (int)next);
+}
+
+TEST(advance_repeat_to_future_multiple_weeks) {
+    time_t base = iso8601_to_time_t("2026-06-25 21:00:00 +0900");
+    time_t now = iso8601_to_time_t("2026-07-20 21:00:00 +0900");
+    ASSERT(base != (time_t)-1);
+    ASSERT(now != (time_t)-1);
+    time_t next = todox_advance_repeat_to_future(base, now);
+    ASSERT(next > now);
+}
+
 void run_repeat_tests(void) {
     RUN_TEST(weekday_expr_single);
     RUN_TEST(weekday_expr_range);
@@ -94,4 +114,6 @@ void run_repeat_tests(void) {
     RUN_TEST(weekday_expand_no_tz_matches_explicit);
     RUN_TEST(weekday_expand_missing_time);
     RUN_TEST(next_weekly_occurrence);
+    RUN_TEST(advance_repeat_to_future_once);
+    RUN_TEST(advance_repeat_to_future_multiple_weeks);
 }

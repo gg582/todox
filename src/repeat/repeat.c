@@ -282,3 +282,10 @@ time_t todox_next_weekly_occurrence(time_t t) {
     tm_time.tm_mday += 7;
     return mktime(&tm_time);
 }
+
+time_t todox_advance_repeat_to_future(time_t t, time_t now) {
+    while(t <= now) {
+        t = todox_next_weekly_occurrence(t);
+    }
+    return t;
+}

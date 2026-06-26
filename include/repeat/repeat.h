@@ -23,4 +23,11 @@ int expand_weekday_triplet(const char *s, todox_format_t *out);
  */
 time_t todox_next_weekly_occurrence(time_t t);
 
+/** @brief advances a weekly repeating timestamp until it is strictly in the future.
+ * @param[in] t a unix timestamp.
+ * @param[in] now the current unix timestamp.
+ * @return the next weekly occurrence of t that is strictly later than now.
+ */
+time_t todox_advance_repeat_to_future(time_t t, time_t now);
+
 #endif

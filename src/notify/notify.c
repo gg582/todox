@@ -50,6 +50,19 @@ static void advance_repeat_alarm(todox_notify_process_t *proc, size_t idx) {
     proc->alarm_list.tasks[j] = moved;
 }
 
+/** @brief sorts the alarm list by timestamp using insertion sort. */
+static void sort_alarms_by_time(todox_list *lst) {
+    for(size_t i = 1; i < lst->len; i++) {
+        todox_format_t key = lst->tasks[i];
+        size_t j = i;
+        while(j > 0 && lst->tasks[j - 1].ts > key.ts) {
+            lst->tasks[j] = lst->tasks[j - 1];
+            j--;
+        }
+        lst->tasks[j] = key;
+    }
+}
+
 static size_t find_next_alarm(todox_notify_process_t *proc, time_t now) {
     for(size_t i = proc->current_index; i < proc->alarm_list.len; i++) {
         if(proc->alarm_list.tasks[i].ts > now) {
@@ -68,15 +81,26 @@ static void reload_alarms(todox_notify_process_t *proc) {
 }
 
 static void purge_past_alarms(todox_notify_process_t *proc, time_t now) {
+    int changed = 0;
     size_t write_idx = 0;
     for(size_t i = 0; i < proc->alarm_list.len; i++) {
-        if(proc->alarm_list.tasks[i].ts > now) {
-            proc->alarm_list.tasks[write_idx++] = proc->alarm_list.tasks[i];
+        todox_format_t alarm = proc->alarm_list.tasks[i];
+        if(alarm.ts <= now) {
+            if(alarm.repeat) {
+                alarm.ts = todox_advance_repeat_to_future(alarm.ts, now);
+                proc->alarm_list.tasks[write_idx++] = alarm;
+                changed = 1;
+            } else {
+                changed = 1;
+            }
+        } else {
+            proc->alarm_list.tasks[write_idx++] = alarm;
         }
     }
-    if(write_idx != proc->alarm_list.len) {
+    if(changed) {
         proc->alarm_list.len = write_idx;
         proc->current_index = 0;
+        sort_alarms_by_time(&proc->alarm_list);
         todox_write_config(proc->config_path, &proc->alarm_list);
     }
 }
