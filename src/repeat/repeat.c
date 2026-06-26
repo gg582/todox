@@ -123,6 +123,14 @@ static int parse_tz_offset(const char *s) {
     return 0;
 }
 
+/** @brief returns the current system timezone offset in seconds east of UTC. */
+static int get_system_tz_offset(void) {
+    time_t now = time(NULL);
+    struct tm tm_now;
+    localtime_r(&now, &tm_now);
+    return (int)tm_now.tm_gmtoff;
+}
+
 /** @brief parses a time field as HH:MM:SS with an optional +HHMM/-HHMM offset. */
 static int parse_time_field(const char *s, int *hour, int *min, int *sec, int *tz_offset) {
     char buf[64];
@@ -146,7 +154,7 @@ static int parse_time_field(const char *s, int *hour, int *min, int *sec, int *t
         *hour = tm_time.tm_hour;
         *min = tm_time.tm_min;
         *sec = tm_time.tm_sec;
-        *tz_offset = 0;
+        *tz_offset = get_system_tz_offset();
         return 0;
     }
     return -1;

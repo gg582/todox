@@ -1,5 +1,6 @@
 #include "test.h"
 #include <repeat/repeat.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -45,6 +46,29 @@ TEST(weekday_expand_list) {
     ASSERT_EQ_INT(3, n);
 }
 
+TEST(weekday_expand_no_tz_matches_explicit) {
+    const char *orig_tz = getenv("TZ");
+    setenv("TZ", "KST-9", 1);
+    tzset();
+
+    todox_format_t with_tz[7] = {0};
+    todox_format_t without_tz[7] = {0};
+
+    int n1 = expand_weekday_triplet("mon%%21:00:00 +0900%%task%%comment", with_tz);
+    int n2 = expand_weekday_triplet("mon%%21:00:00%%task%%comment", without_tz);
+
+    if(orig_tz != NULL) {
+        setenv("TZ", orig_tz, 1);
+    } else {
+        unsetenv("TZ");
+    }
+    tzset();
+
+    ASSERT_EQ_INT(n1, n2);
+    ASSERT_EQ_INT(1, n1);
+    ASSERT_EQ_INT(with_tz[0].ts, without_tz[0].ts);
+}
+
 TEST(weekday_expand_missing_time) {
     todox_format_t items[7] = {0};
     int n = expand_weekday_triplet("mon%%task%%comment", items);
@@ -67,6 +91,7 @@ void run_repeat_tests(void) {
     RUN_TEST(weekday_expand_single);
     RUN_TEST(weekday_expand_range);
     RUN_TEST(weekday_expand_list);
+    RUN_TEST(weekday_expand_no_tz_matches_explicit);
     RUN_TEST(weekday_expand_missing_time);
     RUN_TEST(next_weekly_occurrence);
 }
