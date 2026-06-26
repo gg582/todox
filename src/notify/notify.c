@@ -2,6 +2,7 @@
 #include <file/config.h>
 #include <file/format.h>
 #include <list/list.h>
+#include <repeat/repeat.h>
 #include <error/error.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +37,19 @@ static long time_diff_ms(time_t future, time_t now) {
         return 0;
     }
     return (long)(diff * 1000.0);
+}
+
+/** @brief advances a repeat alarm by one week and keeps the list sorted. */
+static void advance_repeat_alarm(todox_notify_process_t *proc, size_t idx) {
+    proc->alarm_list.tasks[idx].ts = todox_next_weekly_occurrence(proc->alarm_list.tasks[idx].ts);
+
+    todox_format_t moved = proc->alarm_list.tasks[idx];
+    size_t j = idx;
+    while(j + 1 < proc->alarm_list.len && proc->alarm_list.tasks[j + 1].ts < moved.ts) {
+        proc->alarm_list.tasks[j] = proc->alarm_list.tasks[j + 1];
+        j++;
+    }
+    proc->alarm_list.tasks[j] = moved;
 }
 
 static size_t find_next_alarm(todox_notify_process_t *proc, time_t now) {
@@ -121,7 +135,13 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
             char title[TODOX_ALARM_TASK_MAX_LEN + 16];
             snprintf(title, sizeof(title), "todox: %s", alarm->task);
             todox_send_desktop_notification(title, alarm->comment);
-            proc->current_index = next_idx + 1;
+            if(alarm->repeat) {
+                advance_repeat_alarm(proc, next_idx);
+                proc->current_index = next_idx;
+                todox_write_config(proc->config_path, &proc->alarm_list);
+            } else {
+                proc->current_index = next_idx + 1;
+            }
         }
     }
     return 0;

@@ -58,7 +58,11 @@ int todox_write_config(const char *config, const todox_list *lst) {
         if(gmt != NULL) {
             strftime(ts_str, sizeof(ts_str), TODOX_TIME_FORMAT, gmt);
         }
-        fprintf(config_file, "%s%%%%%s%%%%%s\n", ts_str, itm->task, itm->comment);
+        if(itm->repeat) {
+            fprintf(config_file, "%s%%%%%s%%%%%s%%%%repeat\n", ts_str, itm->task, itm->comment);
+        } else {
+            fprintf(config_file, "%s%%%%%s%%%%%s\n", ts_str, itm->task, itm->comment);
+        }
     }
 
     fclose(config_file);

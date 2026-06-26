@@ -5,6 +5,7 @@
 #include <file/format.h>
 #include <list/list.h>
 #include <notify/notify.h>
+#include <repeat/repeat.h>
 #include <error/error.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,6 +62,9 @@ static int cmd_help(const char *progname) {
     printf("commands:\n");
     printf("  (none)                      parse and list alarms\n");
     printf("  add [file] \"TS%%%%TASK%%%%COMMENT\"  add an alarm\n");
+    printf("  add [file] \"TS%%%%TASK%%%%COMMENT%%%%repeat\"\n");
+    printf("                              add a weekly repeating alarm\n");
+    printf("  add [file] \"DAY%%%%TASK%%%%COMMENT\"  add a weekly alarm on DAY\n");
     printf("  remove [file] \"TASK\"            remove an alarm\n");
     printf("  --daemonize [file]            run notification daemon in background\n");
     printf("\n");
@@ -70,6 +74,10 @@ static int cmd_help(const char *progname) {
     printf("  most commands do not need a file path.\n");
     printf("  date can be omitted from TS; time-only input is treated as today.\n");
     printf("    e.g. \"21:00:00 +0900%%%%task%%%%comment\" uses today's date.\n");
+    printf("  DAY is a weekday expression: mon, tue, wed, thu, fri, sat, sun,\n");
+    printf("    a range such as mon-fri, or a list such as mon:wed:fri.\n");
+    printf("  alarms created with DAY or the %%%%repeat token fire every week.\n");
+    printf("  the daemon advances repeating alarms by one week after they fire.\n");
     printf("\n");
     printf("examples:\n");
     printf("  %s alarm.txt\n", progname);
@@ -77,6 +85,9 @@ static int cmd_help(const char *progname) {
     printf("  %s add alarm.txt \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s add \"1970-01-01 00:00:00 +0000%%%%test title%%%%test comment\"\n", progname);
     printf("  %s add \"21:00:00 +0900%%%%task%%%%comment\"       (today's date)\n", progname);
+    printf("  %s add \"mon-fri%%%%standup%%%%daily sync\"        (weekday alarm)\n", progname);
+    printf("  %s add \"mon:wed:fri%%%%gym%%%%workout\"          (selected weekdays)\n", progname);
+    printf("  %s add \"09:00:00 +0900%%%%report%%%%weekly%%%%repeat\"  (weekly repeat)\n", progname);
     printf("  %s remove alarm.txt \"test title\"\n", progname);
     printf("  TODOX_ALARM_FILE=alarm.txt %s remove \"test title\"\n", progname);
     printf("  %s --daemonize alarm.txt\n", progname);
@@ -97,6 +108,11 @@ static int run_daemon(int argc, char **argv) {
     return ret;
 }
 
+/** @brief checks whether a task name already exists in the alarm list. */
+static int is_duplicate(const todox_list *lst, const char *task) {
+    return todox_task_find((todox_list *)lst, task) != (unsigned)-1;
+}
+
 static int cmd_add(int argc, char **argv) {
     const char *file;
     const char *triple;
@@ -112,13 +128,34 @@ static int cmd_add(int argc, char **argv) {
     }
 
     todox_list lst = todox_parse_config(file);
+    if(is_weekday_expr(triple)) {
+        todox_format_t items[7] = {0};
+        int n = expand_weekday_triplet(triple, items);
+        if(n < 0) {
+            fprintf(stderr, "invalid weekday format\n");
+            free(lst.tasks);
+            return 1;
+        }
+        if(is_duplicate(&lst, items[0].task)) {
+            fprintf(stderr, "duplicate task name: %s\n", items[0].task);
+            free(lst.tasks);
+            return 1;
+        }
+        for(int i = 0; i < n; i++) {
+            todox_task_push(&lst, items[i]);
+        }
+        int ret = todox_write_config(file, &lst);
+        free(lst.tasks);
+        return ret;
+    }
+
     todox_format_t itm = {0};
     if(parse_triplet(triple, &itm) != 0) {
         fprintf(stderr, "invalid alarm format\n");
         free(lst.tasks);
         return 1;
     }
-    if(todox_task_find(&lst, itm.task) != (unsigned)-1) {
+    if(is_duplicate(&lst, itm.task)) {
         fprintf(stderr, "duplicate task name: %s\n", itm.task);
         free(lst.tasks);
         return 1;

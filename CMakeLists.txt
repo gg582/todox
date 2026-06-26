@@ -26,6 +26,7 @@ set(TODOX_SOURCES
     src/list/list.c
     src/time/time.c
     src/time/table.c
+    src/repeat/repeat.c
 )
 
 add_executable(todox ${TODOX_SOURCES})
@@ -39,10 +40,12 @@ set(TODOX_TEST_SOURCES
     tests/test_list.c
     tests/test_parse.c
     tests/test_time.c
+    tests/test_repeat.c
     src/app/parse.c
     src/error/error.c
     src/list/list.c
     src/time/time.c
+    src/repeat/repeat.c
 )
 
 add_executable(todox_test ${TODOX_TEST_SOURCES})

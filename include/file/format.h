@@ -23,6 +23,8 @@ typedef struct __todox_format_t {
     char task[TODOX_ALARM_TASK_MAX_LEN];
     /// a comment section of a task
     char comment[TODOX_ALARM_COMMENT_MAX_LEN];
+    /// non-zero when the alarm repeats weekly
+    int repeat;
 } todox_format_t;
 
 /** @brief converts an ISO 8601 datetime string to time_t.
