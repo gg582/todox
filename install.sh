@@ -72,16 +72,6 @@ EOF
     chmod 644 /etc/profile.d/${SERVICE_NAME}.sh
 }
 
-# If an old system-wide service exists, stop and disable it so it does not fight
-# with the new per-user service.
-disable_legacy_system_service() {
-    if [ -f /etc/systemd/system/${SERVICE_NAME}.service ]; then
-        echo "note: stopping/disabling existing system-wide ${SERVICE_NAME}.service"
-        systemctl stop ${SERVICE_NAME} 2>/dev/null || true
-        systemctl disable ${SERVICE_NAME} 2>/dev/null || true
-    fi
-}
-
 DAEMON_USER=$(detect_daemon_user)
 DAEMON_UID=$(id -u "$DAEMON_USER" 2>/dev/null || true)
 if [ -z "$DAEMON_UID" ]; then
@@ -101,7 +91,6 @@ case "$TARGET" in
         install_bin
         install_config "$DAEMON_USER"
         install_env
-        disable_legacy_system_service
         # Install as a user service so it runs inside the desktop user's session
         # and can reach the D-Bus session bus used by the notification daemon.
         USER_SYSTEMD_DIR=$(getent passwd "$DAEMON_USER" | cut -d: -f6)/.config/systemd/user
