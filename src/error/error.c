@@ -4,7 +4,7 @@
 
 todox_error_t TODOX_ERROR(const char *msg, enum TODOX_ERROR_LEVEL level, int code) {
     todox_error_t err;
-    err.msg = strdup(msg);
+    err.msg = (char *) msg;
     err.level = level;
     err.code = code;
     return err;
