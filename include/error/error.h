@@ -19,7 +19,7 @@ enum TODOX_ERROR_LEVEL { DEFAULT, ERROR, WARN, INFO, DEBUG };
 typedef struct __todox_error_t {
     enum TODOX_ERROR_LEVEL level;
     int code;
-    char *msg;
+    const char *msg;
 } todox_error_t;
 
 /** @brief notifies an error message according to its level.
