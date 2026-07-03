@@ -31,14 +31,11 @@ int is_multi_triplet(const char *s);
 /** @brief parses a multi-alarm string into a todox item.
  * @details field order: group_name%%comment%%timestamp
  *          if timestamp is time-only (HH:MM:SS [+|-]HHMM) today's date is
- *          prepended.  The task field of @p out is set to @p group_name so
- *          that the caller controls the shared key under which entries are
- *          grouped.
+ *          prepended.  The task field of @p out is set to @p group_name.
  * @param[in] s a multi-alarm string.
  * @param[out] out a parsed todox item.
- * @param[in] group_name the shared task name to assign; must not be NULL.
  * @return 0 on success, -1 on failure.
  */
-int parse_multi_triplet(const char *s, todox_format_t *out, const char *group_name);
+int parse_multi_triplet(const char *s, todox_format_t *out);
 
 #endif

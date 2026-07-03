@@ -14,7 +14,7 @@ static void trim(char *s) {
     }
 }
 
-static int looks_like_time_only(const char *s) {
+static inline int looks_like_time_only(const char *s) {
     return isdigit((unsigned char)s[0]) && isdigit((unsigned char)s[1]) && s[2] == ':' &&
            isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]) && s[5] == ':' &&
            isdigit((unsigned char)s[6]) && isdigit((unsigned char)s[7]);
@@ -158,19 +158,24 @@ int is_multi_triplet(const char *s) {
     return third_field_is_timestamp(buf);
 }
 
-int parse_multi_triplet(const char *s, todox_format_t *out, const char *group_name) {
+int parse_multi_triplet(const char *s, todox_format_t *out) {
     char buf[TODOX_ALARM_MAX_LEN];
     strncpy(buf, s, sizeof(buf) - 1);
     buf[sizeof(buf) - 1] = '\0';
     trim(buf);
 
-    /* the first field is a group name (validated by the caller; we skip past it) */
+    /* the first field is a group name */
     char *p1 = strstr(buf, "%%");
     if(p1 == NULL) {
         return -1;
     }
     *p1 = '\0';
     p1 += 2;
+
+    char group_name[TODOX_ALARM_TASK_MAX_LEN];
+    strncpy(group_name, buf, sizeof(group_name) - 1);
+    group_name[sizeof(group_name) - 1] = '\0';
+    trim(group_name);
 
     /* the second field is a comment */
     char *p2 = strstr(p1, "%%");
@@ -186,6 +191,18 @@ int parse_multi_triplet(const char *s, todox_format_t *out, const char *group_na
     tsbuf[sizeof(tsbuf) - 1] = '\0';
     trim(tsbuf);
 
+    out->repeat = 0;
+    char *p3 = strstr(tsbuf, "%%");
+    if(p3 != NULL) {
+        char *repeat_token = p3 + 2;
+        trim(repeat_token);
+        if(strcmp(repeat_token, "repeat") == 0) {
+            *p3 = '\0';
+            out->repeat = 1;
+            trim(tsbuf);
+        }
+    }
+
     if(looks_like_time_only(tsbuf)) {
         prepend_today(tsbuf, sizeof(tsbuf));
     }
@@ -197,14 +214,12 @@ int parse_multi_triplet(const char *s, todox_format_t *out, const char *group_na
         return -1;
     }
 
-    /* override the task field with the caller-supplied group name */
+    /* override the task field with the group name */
     strncpy(out->task, group_name, TODOX_ALARM_TASK_MAX_LEN - 1);
     out->task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
 
     strncpy(out->comment, p1, TODOX_ALARM_COMMENT_MAX_LEN - 1);
     out->comment[TODOX_ALARM_COMMENT_MAX_LEN - 1] = '\0';
-
-    out->repeat = 0;
 
     return 0;
 }
