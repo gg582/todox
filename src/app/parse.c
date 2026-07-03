@@ -20,6 +20,7 @@ static int looks_like_time_only(const char *s) {
            isdigit((unsigned char)s[6]) && isdigit((unsigned char)s[7]);
 }
 
+/* assume today for time-only timestamps */
 static void prepend_today(char *buf, size_t bufsize) {
     time_t now = time(NULL);
     struct tm *tm_now = localtime(&now);
@@ -27,12 +28,16 @@ static void prepend_today(char *buf, size_t bufsize) {
     if(tm_now == NULL) {
         return;
     }
+
     strftime(date_prefix, sizeof(date_prefix), "%Y-%m-%d ", tm_now);
     size_t prefix_len = strlen(date_prefix);
     size_t buf_len = strlen(buf);
     if(prefix_len + buf_len + 1 > bufsize) {
         return;
     }
+    
+    // WARN: DANGEROUS MEMORY MANAGEMENT VIA memmove+memcpy
+    // memmove+memcpy is a rough call; currently I have no idea to refactor it, but when the format goes longer I should fix.
     memmove(buf + prefix_len, buf, buf_len + 1);
     memcpy(buf, date_prefix, prefix_len);
 }
@@ -93,6 +98,113 @@ int parse_triplet(const char *s, todox_format_t *out) {
     out->task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
     strncpy(out->comment, p2, TODOX_ALARM_COMMENT_MAX_LEN - 1);
     out->comment[TODOX_ALARM_COMMENT_MAX_LEN - 1] = '\0';
+
+    return 0;
+}
+
+/** @brief returns non-zero if the third %%-separated field of @p s looks like
+ *         a timestamp (ISO 8601 datetime or bare HH:MM:SS time).
+ * @details used internally by is_multi_triplet() to distinguish the multi
+ *          format (group%%comment%%timestamp) from a normal triplet
+ *          (timestamp%%task%%comment).
+ */
+static int third_field_is_timestamp(const char *s) {
+    const char *p1 = strstr(s, "%%");
+    if(p1 == NULL) {
+        return 0;
+    }
+    const char *p2 = strstr(p1 + 2, "%%");
+    if(p2 == NULL) {
+        return 0;
+    }
+    /* skip the separator and any leading whitespace */
+    const char *ts = p2 + 2;
+    while(*ts == ' ' || *ts == '\t') {
+        ts++;
+    }
+    /* bare time: HH:MM:SS */
+    if(looks_like_time_only(ts)) {
+        return 1;
+    }
+    /* full datetime: YYYY-MM-DD HH:MM:SS */
+    if(isdigit((unsigned char)ts[0]) && isdigit((unsigned char)ts[1]) &&
+       isdigit((unsigned char)ts[2]) && isdigit((unsigned char)ts[3]) && ts[4] == '-') {
+        return 1;
+    }
+    return 0;
+}
+
+int is_multi_triplet(const char *s) {
+    char buf[TODOX_ALARM_MAX_LEN];
+    strncpy(buf, s, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    trim(buf);
+
+    /* must have at least three fields */
+    if(!is_triplet(buf)) {
+        return 0;
+    }
+    /* the first field must NOT look like a timestamp; if it does the string
+     * is a normal triplet (timestamp%%task%%comment) instead */
+    if(looks_like_time_only(buf)) {
+        return 0;
+    }
+    if(isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1]) &&
+       isdigit((unsigned char)buf[2]) && isdigit((unsigned char)buf[3]) && buf[4] == '-') {
+        return 0;
+    }
+    /* the third field must be a timestamp so we can distinguish
+     * group%%comment%%timestamp from timestamp%%task%%comment */
+    return third_field_is_timestamp(buf);
+}
+
+int parse_multi_triplet(const char *s, todox_format_t *out, const char *group_name) {
+    char buf[TODOX_ALARM_MAX_LEN];
+    strncpy(buf, s, sizeof(buf) - 1);
+    buf[sizeof(buf) - 1] = '\0';
+    trim(buf);
+
+    /* the first field is a group name (validated by the caller; we skip past it) */
+    char *p1 = strstr(buf, "%%");
+    if(p1 == NULL) {
+        return -1;
+    }
+    *p1 = '\0';
+    p1 += 2;
+
+    /* the second field is a comment */
+    char *p2 = strstr(p1, "%%");
+    if(p2 == NULL) {
+        return -1;
+    }
+    *p2 = '\0';
+    p2 += 2;
+
+    /* the thrid field is a timestamp (may be time-only; prepend today if so) */
+    char tsbuf[TODOX_ALARM_MAX_LEN];
+    strncpy(tsbuf, p2, sizeof(tsbuf) - 1);
+    tsbuf[sizeof(tsbuf) - 1] = '\0';
+    trim(tsbuf);
+
+    if(looks_like_time_only(tsbuf)) {
+        prepend_today(tsbuf, sizeof(tsbuf));
+    }
+
+    trim(p1); /* comment */
+
+    out->ts = iso8601_to_time_t(tsbuf);
+    if(out->ts == (time_t)-1) {
+        return -1;
+    }
+
+    /* override the task field with the caller-supplied group name */
+    strncpy(out->task, group_name, TODOX_ALARM_TASK_MAX_LEN - 1);
+    out->task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
+
+    strncpy(out->comment, p1, TODOX_ALARM_COMMENT_MAX_LEN - 1);
+    out->comment[TODOX_ALARM_COMMENT_MAX_LEN - 1] = '\0';
+
+    out->repeat = 0;
 
     return 0;
 }

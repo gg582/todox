@@ -176,10 +176,14 @@ static int cmd_add(int argc, char **argv) {
         free(lst.tasks);
         return 1;
     }
-    if(is_duplicate(&lst, itm.task)) {
-        fprintf(stderr, "duplicate task name: %s\n", itm.task);
-        free(lst.tasks);
-        return 1;
+    unsigned dup_idx = todox_task_find(&lst, itm.task);
+    if(dup_idx != (unsigned)-1) {
+        const todox_format_t *existing = &lst.tasks[dup_idx];
+        if(itm.comment[0] != '\0' && strcmp(existing->comment, itm.comment) != 0) {
+            todox_notify(TODOX_ERROR("different comment for the same task name", WARN, 120));
+            free(lst.tasks);
+            return 1;
+        }
     }
     todox_task_push(&lst, itm);
     int ret = todox_write_config(file, &lst);

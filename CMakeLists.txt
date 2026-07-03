@@ -51,3 +51,18 @@ set(TODOX_TEST_SOURCES
 add_executable(todox_test ${TODOX_TEST_SOURCES})
 target_link_libraries(todox_test ${DBUS_LIBRARIES})
 add_test(NAME todox_test COMMAND todox_test)
+
+# Add custom target for clang-format
+find_program(CLANG_FORMAT "clang-format")
+if(CLANG_FORMAT)
+    file(GLOB_RECURSE ALL_SOURCE_FILES
+        ${PROJECT_SOURCE_DIR}/src/*.c
+        ${PROJECT_SOURCE_DIR}/include/*.h
+        ${PROJECT_SOURCE_DIR}/tests/*.c
+    )
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT} -i ${ALL_SOURCE_FILES}
+        COMMENT "Formatting C source and header files with clang-format"
+    )
+endif()
+

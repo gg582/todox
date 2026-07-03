@@ -24,6 +24,10 @@ void print_tasks(const todox_list *lst) {
         if(gmt != NULL) {
             strftime(ts_str, sizeof(ts_str), TODOX_TIME_FORMAT, gmt);
         }
-        printf("%s | %s | %s\n", ts_str, itm->task, itm->comment);
+        printf("%s | %s | %s", ts_str, itm->task, itm->comment);
+        if(itm->repeat) {
+            printf(" | repeat");
+        }
+        printf("\n");
     }
 }
