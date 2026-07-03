@@ -27,9 +27,9 @@ void todox_msleep(long ms) {
     }
 }
 
-static time_t get_current_time(void) { return time(NULL); }
+static inline time_t get_current_time(void) { return time(NULL); }
 
-static long time_diff_ms(time_t future, time_t now) {
+static inline long time_diff_ms(time_t future, time_t now) {
     double diff = difftime(future, now);
     if(diff <= 0) {
         return 0;

@@ -117,7 +117,7 @@ static int run_daemon(int argc, char **argv) {
 }
 
 /** @brief checks whether a task name already exists in the alarm list. */
-static int is_duplicate(const todox_list *lst, const char *task) {
+static inline int is_duplicate(const todox_list *lst, const char *task) {
     return todox_task_find((todox_list *)lst, task) != (unsigned)-1;
 }
 
@@ -132,6 +132,13 @@ static int is_duplicate_non_repeat(const todox_list *lst, const char *task) {
         }
     }
     return 0;
+}
+
+static inline int parse_any_triplet(const char *triple, todox_format_t *itm) {
+    if(is_multi_triplet(triple)) {
+        return parse_multi_triplet(triple, itm);
+    }
+    return parse_triplet(triple, itm);
 }
 
 static int cmd_add(int argc, char **argv) {
@@ -171,29 +178,7 @@ static int cmd_add(int argc, char **argv) {
     }
 
     todox_format_t itm = {0};
-    int parse_ret = -1;
-    if(is_multi_triplet(triple)) {
-        char group_buf[TODOX_ALARM_MAX_LEN];
-        strncpy(group_buf, triple, sizeof(group_buf) - 1);
-        group_buf[sizeof(group_buf) - 1] = '\0';
-        char *p = strstr(group_buf, "%%");
-        if(p != NULL) {
-            *p = '\0';
-            // Trim group name
-            size_t len = strlen(group_buf);
-            while(len > 0 && (group_buf[len - 1] == ' ' || group_buf[len - 1] == '\t' || group_buf[len - 1] == '\r' || group_buf[len - 1] == '\n')) {
-                group_buf[len - 1] = '\0';
-                len--;
-            }
-            char *start = group_buf;
-            while(*start == ' ' || *start == '\t') {
-                start++;
-            }
-            parse_ret = parse_multi_triplet(triple, &itm, start);
-        }
-    } else {
-        parse_ret = parse_triplet(triple, &itm);
-    }
+    int parse_ret = parse_any_triplet(triple, &itm);
 
     if(parse_ret != 0) {
         fprintf(stderr, "invalid alarm format\n");
