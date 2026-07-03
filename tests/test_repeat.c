@@ -26,7 +26,7 @@ TEST(weekday_expand_single) {
     ASSERT_EQ_INT(1, n);
     ASSERT_EQ_STR("task", items[0].task);
     ASSERT_EQ_STR("comment", items[0].comment);
-    ASSERT_EQ_INT(1, items[0].repeat);
+    ASSERT_EQ_INT(1, items[0].does_repeat);
     ASSERT(items[0].ts != (time_t)-1);
 }
 
@@ -36,7 +36,7 @@ TEST(weekday_expand_range) {
     ASSERT_EQ_INT(5, n);
     for(int i = 0; i < n; i++) {
         ASSERT_EQ_STR("task", items[i].task);
-        ASSERT_EQ_INT(1, items[i].repeat);
+        ASSERT_EQ_INT(1, items[i].does_repeat);
     }
 }
 

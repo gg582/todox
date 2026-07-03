@@ -15,7 +15,7 @@ typedef struct __todox_notify_process_t {
     /// index of the next alarm to fire
     size_t current_index;
     /// non-zero while the daemon should keep running
-    int running;
+    int is_running;
 } todox_notify_process_t;
 
 /** @brief creates a notify process.

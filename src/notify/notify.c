@@ -86,7 +86,7 @@ static void purge_past_alarms(todox_notify_process_t *proc, time_t now) {
     for(size_t i = 0; i < proc->alarm_list.len; i++) {
         todox_format_t alarm = proc->alarm_list.tasks[i];
         if(alarm.ts <= now) {
-            if(alarm.repeat) {
+            if(alarm.does_repeat) {
                 alarm.ts = todox_advance_repeat_to_future(alarm.ts, now);
                 proc->alarm_list.tasks[write_idx++] = alarm;
                 changed = 1;
@@ -113,7 +113,7 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
     proc->config_path = config_path;
     proc->alarm_list = todox_parse_config(config_path);
     proc->current_index = 0;
-    proc->running = 1;
+    proc->is_running = 1;
 
     time_t now = get_current_time();
     proc->current_index = find_next_alarm(proc, now);
@@ -131,7 +131,7 @@ void todox_notify_process_destroy(todox_notify_process_t *proc) {
 }
 
 int todox_notify_process_run(todox_notify_process_t *proc) {
-    while(proc->running) {
+    while(proc->is_running) {
         time_t now = get_current_time();
         purge_past_alarms(proc, now);
         size_t next_idx = find_next_alarm(proc, now);
@@ -157,7 +157,7 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
             char title[TODOX_ALARM_TASK_MAX_LEN + 16];
             snprintf(title, sizeof(title), "todox: %s", alarm->task);
             todox_send_desktop_notification(title, alarm->comment);
-            if(alarm->repeat) {
+            if(alarm->does_repeat) {
                 advance_repeat_alarm(proc, next_idx);
                 proc->current_index = next_idx;
                 todox_write_config(proc->config_path, &proc->alarm_list);

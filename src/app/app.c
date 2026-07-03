@@ -124,7 +124,7 @@ static inline int is_duplicate(const todox_list *lst, const char *task) {
 /** @brief checks whether a non-repeating task name already exists. */
 static int is_duplicate_non_repeat(const todox_list *lst, const char *task) {
     for(size_t idx = 0U; idx < lst->len; idx++) {
-        if(lst->tasks[idx].repeat) {
+        if(lst->tasks[idx].does_repeat) {
             continue;
         }
         if(strncmp(lst->tasks[idx].task, task, TODOX_ALARM_TASK_MAX_LEN) == 0) {

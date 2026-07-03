@@ -74,14 +74,14 @@ int parse_triplet(const char *s, todox_format_t *out) {
     *p2 = '\0';
     p2 += 2;
 
-    out->repeat = 0;
+    out->does_repeat = 0;
     char *p3 = strstr(p2, "%%");
     if(p3 != NULL) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {
             *p3 = '\0';
-            out->repeat = 1;
+            out->does_repeat = 1;
         }
     }
 
@@ -191,14 +191,14 @@ int parse_multi_triplet(const char *s, todox_format_t *out) {
     tsbuf[sizeof(tsbuf) - 1] = '\0';
     trim(tsbuf);
 
-    out->repeat = 0;
+    out->does_repeat = 0;
     char *p3 = strstr(tsbuf, "%%");
     if(p3 != NULL) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {
             *p3 = '\0';
-            out->repeat = 1;
+            out->does_repeat = 1;
             trim(tsbuf);
         }
     }

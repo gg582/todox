@@ -267,7 +267,7 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
 
     for(size_t i = 0; i < count; i++) {
         out[i].ts = next_weekday_timestamp(wdays[i], hour, min, sec, tz_offset);
-        out[i].repeat = 1;
+        out[i].does_repeat = 1;
         strncpy(out[i].task, task, TODOX_ALARM_TASK_MAX_LEN - 1);
         out[i].task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
         strncpy(out[i].comment, comment, TODOX_ALARM_COMMENT_MAX_LEN - 1);

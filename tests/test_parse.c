@@ -39,7 +39,7 @@ TEST(parse_full_timestamp_with_repeat) {
     ASSERT_EQ_INT(0, ret);
     ASSERT_EQ_STR("task", itm.task);
     ASSERT_EQ_STR("comment", itm.comment);
-    ASSERT_EQ_INT(1, itm.repeat);
+    ASSERT_EQ_INT(1, itm.does_repeat);
 }
 
 TEST(is_triplet_positive) { ASSERT(is_triplet("a%%b%%c")); }
@@ -53,14 +53,14 @@ TEST(parse_multi_triplet_valid) {
     ASSERT_EQ_INT(0, ret);
     ASSERT_EQ_STR("group_name", itm.task);
     ASSERT_EQ_STR("my comment", itm.comment);
-    ASSERT_EQ_INT(0, itm.repeat);
+    ASSERT_EQ_INT(0, itm.does_repeat);
 
     todox_format_t itm2 = {0};
     int ret2 = parse_multi_triplet("group_name%%my comment%%21:30:00 +0900%%repeat", &itm2);
     ASSERT_EQ_INT(0, ret2);
     ASSERT_EQ_STR("group_name", itm2.task);
     ASSERT_EQ_STR("my comment", itm2.comment);
-    ASSERT_EQ_INT(1, itm2.repeat);
+    ASSERT_EQ_INT(1, itm2.does_repeat);
 }
 
 TEST(parse_multi_triplet_negative) {
