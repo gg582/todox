@@ -107,7 +107,7 @@ static int cmd_help(const char *progname) {
 static int run_daemon(int argc, char **argv) {
     const char *file = get_alarm_file(argc, argv, 2);
     todox_notify_process_t *proc = todox_notify_process_create(file);
-    if(proc == NULL) {
+    if(proc == nullptr) {
         fprintf(stderr, "failed to create notify process\n");
         return 1;
     }
@@ -145,7 +145,7 @@ static int cmd_add(int argc, char **argv) {
     const char *file;
     const char *triple;
     if(argc == 3) {
-        file = get_alarm_file(0, NULL, 0);
+        file = get_alarm_file(0, nullptr, 0);
         triple = argv[2];
     } else if(argc == 4) {
         file = argv[2];
@@ -204,7 +204,7 @@ static int cmd_remove(int argc, char **argv) {
     const char *file;
     const char *task;
     if(argc == 3) {
-        file = get_alarm_file(0, NULL, 0);
+        file = get_alarm_file(0, nullptr, 0);
         task = argv[2];
     } else if(argc == 4) {
         file = argv[2];

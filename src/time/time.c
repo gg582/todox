@@ -41,9 +41,9 @@ time_t iso8601_to_time_t(const char *ts) {
     time_t t = (time_t)-1;
     bool has_tz = false;
 
-    if(strptime(ts, TODOX_TIME_FORMAT, &tm_time) != NULL) {
+    if(strptime(ts, TODOX_TIME_FORMAT, &tm_time) != nullptr) {
         has_tz = true;
-    } else if(try_convert_without_tz(ts, &tm_time) == NULL) {
+    } else if(try_convert_without_tz(ts, &tm_time) == nullptr) {
         todox_notify(TODOX_ERROR("wrong time format", WARN, TODOX_WRONG_TIMESTAMP));
         return t;
     }

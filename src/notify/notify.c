@@ -27,7 +27,7 @@ void todox_msleep(long ms) {
     }
 }
 
-static inline time_t get_current_time(void) { return time(NULL); }
+static inline time_t get_current_time(void) { return time(nullptr); }
 
 static inline long time_diff_ms(time_t future, time_t now) {
     double diff = difftime(future, now);
@@ -73,7 +73,7 @@ static size_t find_next_alarm(todox_notify_process_t *proc, time_t now) {
 }
 
 static void reload_alarms(todox_notify_process_t *proc) {
-    if(proc->alarm_list.tasks != NULL) {
+    if(proc->alarm_list.tasks != nullptr) {
         free(proc->alarm_list.tasks);
     }
     proc->alarm_list = todox_parse_config(proc->config_path);
@@ -107,8 +107,8 @@ static void purge_past_alarms(todox_notify_process_t *proc, time_t now) {
 
 todox_notify_process_t *todox_notify_process_create(const char *config_path) {
     todox_notify_process_t *proc = malloc(sizeof(todox_notify_process_t));
-    if(proc == NULL) {
-        return NULL;
+    if(proc == nullptr) {
+        return nullptr;
     }
     proc->config_path = config_path;
     proc->alarm_list = todox_parse_config(config_path);
@@ -121,10 +121,10 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
 }
 
 void todox_notify_process_destroy(todox_notify_process_t *proc) {
-    if(proc == NULL) {
+    if(proc == nullptr) {
         return;
     }
-    if(proc->alarm_list.tasks != NULL) {
+    if(proc->alarm_list.tasks != nullptr) {
         free(proc->alarm_list.tasks);
     }
     free(proc);

@@ -58,7 +58,7 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
     *count = 0;
 
     char *dash = strchr(buf, '-');
-    if(dash != NULL) {
+    if(dash != nullptr) {
         *dash = '\0';
         int start = parse_single_wday(buf);
         int end = parse_single_wday(dash + 1);
@@ -80,10 +80,10 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
     }
 
     char *colon = strchr(buf, ':');
-    if(colon != NULL) {
-        char *saveptr = NULL;
+    if(colon != nullptr) {
+        char *saveptr = nullptr;
         char *token = strtok_r(buf, ":", &saveptr);
-        while(token != NULL) {
+        while(token != nullptr) {
             int w = parse_single_wday(token);
             if(w < 0) {
                 return -1;
@@ -92,7 +92,7 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
             if(*count > 7) {
                 return -1;
             }
-            token = strtok_r(NULL, ":", &saveptr);
+            token = strtok_r(nullptr, ":", &saveptr);
         }
         return 0;
     }
@@ -125,7 +125,7 @@ static int parse_tz_offset(const char *s) {
 
 /** @brief returns the current system timezone offset in seconds east of UTC. */
 static int get_system_tz_offset(void) {
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm tm_now;
     localtime_r(&now, &tm_now);
     return (int)tm_now.tm_gmtoff;
@@ -143,14 +143,14 @@ static int parse_time_field(const char *s, int *hour, int *min, int *sec, int *t
     }
 
     struct tm tm_time = {0};
-    if(strptime(buf, "%H:%M:%S %z", &tm_time) != NULL) {
+    if(strptime(buf, "%H:%M:%S %z", &tm_time) != nullptr) {
         *hour = tm_time.tm_hour;
         *min = tm_time.tm_min;
         *sec = tm_time.tm_sec;
         *tz_offset = parse_tz_offset(buf);
         return 0;
     }
-    if(strptime(buf, "%H:%M:%S", &tm_time) != NULL) {
+    if(strptime(buf, "%H:%M:%S", &tm_time) != nullptr) {
         *hour = tm_time.tm_hour;
         *min = tm_time.tm_min;
         *sec = tm_time.tm_sec;
@@ -162,7 +162,7 @@ static int parse_time_field(const char *s, int *hour, int *min, int *sec, int *t
 
 /** @brief computes the next occurrence of a weekday at the given time in a timezone-aware way. */
 static time_t next_weekday_timestamp(int wday, int hour, int min, int sec, int tz_offset) {
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     time_t now_in_tz = now + tz_offset;
     struct tm tm_now;
     gmtime_r(&now_in_tz, &tm_now);
@@ -186,7 +186,7 @@ static time_t next_weekday_timestamp(int wday, int hour, int min, int sec, int t
 static size_t count_fields(const char *s) {
     size_t count = 1;
     const char *p = s;
-    while((p = strstr(p, "%%")) != NULL) {
+    while((p = strstr(p, "%%")) != nullptr) {
         count++;
         p += 2;
     }
@@ -204,7 +204,7 @@ int is_weekday_expr(const char *s) {
     }
 
     char *sep = strstr(buf, "%%");
-    if(sep != NULL) {
+    if(sep != nullptr) {
         *sep = '\0';
     }
 
@@ -227,7 +227,7 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     }
 
     char *sep = strstr(buf, "%%");
-    if(sep == NULL) {
+    if(sep == nullptr) {
         return -1;
     }
     *sep = '\0';
@@ -235,7 +235,7 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     char *rest = sep + 2;
 
     char *time_sep = strstr(rest, "%%");
-    if(time_sep == NULL) {
+    if(time_sep == nullptr) {
         return -1;
     }
     *time_sep = '\0';
@@ -243,7 +243,7 @@ int expand_weekday_triplet(const char *s, todox_format_t *out) {
     char *task_comment = time_sep + 2;
 
     char *task_sep = strstr(task_comment, "%%");
-    if(task_sep == NULL) {
+    if(task_sep == nullptr) {
         return -1;
     }
     *task_sep = '\0';

@@ -22,10 +22,10 @@ static inline int looks_like_time_only(const char *s) {
 
 /* assume today for time-only timestamps */
 static void prepend_today(char *buf, size_t bufsize) {
-    time_t now = time(NULL);
+    time_t now = time(nullptr);
     struct tm *tm_now = localtime(&now);
     char date_prefix[32] = {0};
-    if(tm_now == NULL) {
+    if(tm_now == nullptr) {
         return;
     }
 
@@ -44,10 +44,10 @@ static void prepend_today(char *buf, size_t bufsize) {
 
 bool is_triplet(const char *s) {
     const char *p1 = strstr(s, "%%");
-    if(p1 == NULL) {
+    if(p1 == nullptr) {
         return false;
     }
-    return strstr(p1 + 2, "%%") != NULL;
+    return strstr(p1 + 2, "%%") != nullptr;
 }
 
 int parse_triplet(const char *s, todox_format_t *out) {
@@ -61,14 +61,14 @@ int parse_triplet(const char *s, todox_format_t *out) {
     }
 
     char *p1 = strstr(buf, "%%");
-    if(p1 == NULL) {
+    if(p1 == nullptr) {
         return -1;
     }
     *p1 = '\0';
     p1 += 2;
 
     char *p2 = strstr(p1, "%%");
-    if(p2 == NULL) {
+    if(p2 == nullptr) {
         return -1;
     }
     *p2 = '\0';
@@ -76,7 +76,7 @@ int parse_triplet(const char *s, todox_format_t *out) {
 
     out->does_repeat = false;
     char *p3 = strstr(p2, "%%");
-    if(p3 != NULL) {
+    if(p3 != nullptr) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {
@@ -110,11 +110,11 @@ int parse_triplet(const char *s, todox_format_t *out) {
  */
 static bool third_field_is_timestamp(const char *s) {
     const char *p1 = strstr(s, "%%");
-    if(p1 == NULL) {
+    if(p1 == nullptr) {
         return false;
     }
     const char *p2 = strstr(p1 + 2, "%%");
-    if(p2 == NULL) {
+    if(p2 == nullptr) {
         return false;
     }
     /* skip the separator and any leading whitespace */
@@ -166,7 +166,7 @@ int parse_multi_triplet(const char *s, todox_format_t *out) {
 
     /* the first field is a group name */
     char *p1 = strstr(buf, "%%");
-    if(p1 == NULL) {
+    if(p1 == nullptr) {
         return -1;
     }
     *p1 = '\0';
@@ -179,7 +179,7 @@ int parse_multi_triplet(const char *s, todox_format_t *out) {
 
     /* the second field is a comment */
     char *p2 = strstr(p1, "%%");
-    if(p2 == NULL) {
+    if(p2 == nullptr) {
         return -1;
     }
     *p2 = '\0';
@@ -193,7 +193,7 @@ int parse_multi_triplet(const char *s, todox_format_t *out) {
 
     out->does_repeat = false;
     char *p3 = strstr(tsbuf, "%%");
-    if(p3 != NULL) {
+    if(p3 != nullptr) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {

@@ -20,9 +20,9 @@ int todox_send_desktop_notification(const char *title, const char *body) {
      * This keeps the daemon working when launched as a systemd --user service
      * or from an otherwise clean environment.
      */
-    if(conn == NULL && getenv("DBUS_SESSION_BUS_ADDRESS") == NULL) {
+    if(conn == nullptr && getenv("DBUS_SESSION_BUS_ADDRESS") == nullptr) {
         const char *runtime = getenv("XDG_RUNTIME_DIR");
-        if(runtime != NULL) {
+        if(runtime != nullptr) {
             char addr[512];
             int n = snprintf(addr, sizeof(addr), "unix:path=%s/bus", runtime);
             if(n > 0 && (size_t)n < sizeof(addr)) {
@@ -38,7 +38,7 @@ int todox_send_desktop_notification(const char *title, const char *body) {
         syslog(LOG_ERR, "todox: failed to get dbus session bus: %s", err.message);
         dbus_error_free(&err);
     }
-    if(conn == NULL) {
+    if(conn == nullptr) {
         syslog(
             LOG_ERR,
             "todox: dbus connection is null (DBUS_SESSION_BUS_ADDRESS may be missing or invalid)");
@@ -48,7 +48,7 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     msg = dbus_message_new_method_call("org.freedesktop.Notifications",
                                        "/org/freedesktop/Notifications",
                                        "org.freedesktop.Notifications", "Notify");
-    if(msg == NULL) {
+    if(msg == nullptr) {
         syslog(LOG_ERR, "todox: failed to create dbus Notify message");
         return -1;
     }
@@ -81,13 +81,13 @@ int todox_send_desktop_notification(const char *title, const char *body) {
     if(dbus_error_is_set(&err)) {
         syslog(LOG_ERR, "todox: dbus Notify call failed: %s", err.message);
         dbus_error_free(&err);
-        if(reply != NULL) {
+        if(reply != nullptr) {
             dbus_message_unref(reply);
         }
         return -1;
     }
 
-    if(reply != NULL) {
+    if(reply != nullptr) {
         dbus_message_unref(reply);
     }
     return 0;

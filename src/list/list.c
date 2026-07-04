@@ -37,7 +37,7 @@ const char *todox_task_remove(todox_list *lst, const char *task) {
     static char removed_task[TODOX_ALARM_TASK_MAX_LEN];
     unsigned idx = todox_task_find(lst, task);
     if(idx == (unsigned)-1) {
-        return NULL;
+        return nullptr;
     }
     strncpy(removed_task, lst->tasks[idx].task, TODOX_ALARM_TASK_MAX_LEN - 1);
     removed_task[TODOX_ALARM_TASK_MAX_LEN - 1] = '\0';
