@@ -1,5 +1,5 @@
-#ifndef __TODOX_ERROR_H__
-#define __TODOX_ERROR_H__
+#ifndef TODOX_ERROR_H
+#define TODOX_ERROR_H
 
 #include <stdio.h>
 

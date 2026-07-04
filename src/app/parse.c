@@ -42,10 +42,10 @@ static void prepend_today(char *buf, size_t bufsize) {
     memcpy(buf, date_prefix, prefix_len);
 }
 
-int is_triplet(const char *s) {
+bool is_triplet(const char *s) {
     const char *p1 = strstr(s, "%%");
     if(p1 == NULL) {
-        return 0;
+        return false;
     }
     return strstr(p1 + 2, "%%") != NULL;
 }
@@ -74,14 +74,14 @@ int parse_triplet(const char *s, todox_format_t *out) {
     *p2 = '\0';
     p2 += 2;
 
-    out->does_repeat = 0;
+    out->does_repeat = false;
     char *p3 = strstr(p2, "%%");
     if(p3 != NULL) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {
             *p3 = '\0';
-            out->does_repeat = 1;
+            out->does_repeat = true;
         }
     }
 
@@ -102,20 +102,20 @@ int parse_triplet(const char *s, todox_format_t *out) {
     return 0;
 }
 
-/** @brief returns non-zero if the third %%-separated field of @p s looks like
+/** @brief returns true if the third %%-separated field of @p s looks like
  *         a timestamp (ISO 8601 datetime or bare HH:MM:SS time).
  * @details used internally by is_multi_triplet() to distinguish the multi
  *          format (group%%comment%%timestamp) from a normal triplet
  *          (timestamp%%task%%comment).
  */
-static int third_field_is_timestamp(const char *s) {
+static bool third_field_is_timestamp(const char *s) {
     const char *p1 = strstr(s, "%%");
     if(p1 == NULL) {
-        return 0;
+        return false;
     }
     const char *p2 = strstr(p1 + 2, "%%");
     if(p2 == NULL) {
-        return 0;
+        return false;
     }
     /* skip the separator and any leading whitespace */
     const char *ts = p2 + 2;
@@ -124,17 +124,17 @@ static int third_field_is_timestamp(const char *s) {
     }
     /* bare time: HH:MM:SS */
     if(looks_like_time_only(ts)) {
-        return 1;
+        return true;
     }
     /* full datetime: YYYY-MM-DD HH:MM:SS */
     if(isdigit((unsigned char)ts[0]) && isdigit((unsigned char)ts[1]) &&
        isdigit((unsigned char)ts[2]) && isdigit((unsigned char)ts[3]) && ts[4] == '-') {
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
-int is_multi_triplet(const char *s) {
+bool is_multi_triplet(const char *s) {
     char buf[TODOX_ALARM_MAX_LEN];
     strncpy(buf, s, sizeof(buf) - 1);
     buf[sizeof(buf) - 1] = '\0';
@@ -142,16 +142,16 @@ int is_multi_triplet(const char *s) {
 
     /* must have at least three fields */
     if(!is_triplet(buf)) {
-        return 0;
+        return false;
     }
     /* the first field must NOT look like a timestamp; if it does the string
      * is a normal triplet (timestamp%%task%%comment) instead */
     if(looks_like_time_only(buf)) {
-        return 0;
+        return false;
     }
     if(isdigit((unsigned char)buf[0]) && isdigit((unsigned char)buf[1]) &&
        isdigit((unsigned char)buf[2]) && isdigit((unsigned char)buf[3]) && buf[4] == '-') {
-        return 0;
+        return false;
     }
     /* the third field must be a timestamp so we can distinguish
      * group%%comment%%timestamp from timestamp%%task%%comment */
@@ -191,14 +191,14 @@ int parse_multi_triplet(const char *s, todox_format_t *out) {
     tsbuf[sizeof(tsbuf) - 1] = '\0';
     trim(tsbuf);
 
-    out->does_repeat = 0;
+    out->does_repeat = false;
     char *p3 = strstr(tsbuf, "%%");
     if(p3 != NULL) {
         char *repeat_token = p3 + 2;
         trim(repeat_token);
         if(strcmp(repeat_token, "repeat") == 0) {
             *p3 = '\0';
-            out->does_repeat = 1;
+            out->does_repeat = true;
             trim(tsbuf);
         }
     }

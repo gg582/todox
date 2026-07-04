@@ -1,5 +1,5 @@
-#ifndef __TODOX_CONFIG_H__
-#define __TODOX_CONFIG_H__
+#ifndef TODOX_CONFIG_H
+#define TODOX_CONFIG_H
 
 #include <file/format.h>
 #include <list/list.h>

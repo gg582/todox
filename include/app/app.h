@@ -1,5 +1,5 @@
-#ifndef __TODOX_APP_H__
-#define __TODOX_APP_H__
+#ifndef TODOX_APP_H
+#define TODOX_APP_H
 
 /** @brief runs the todox application.
  * @param[in] argc argument count.

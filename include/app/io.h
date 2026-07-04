@@ -1,5 +1,5 @@
-#ifndef __TODOX_IO_H__
-#define __TODOX_IO_H__
+#ifndef TODOX_IO_H
+#define TODOX_IO_H
 
 #include <file/format.h>
 #include <list/list.h>

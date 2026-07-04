@@ -1,5 +1,5 @@
-#ifndef __TODOX_NOTIFY_H__
-#define __TODOX_NOTIFY_H__
+#ifndef TODOX_NOTIFY_H
+#define TODOX_NOTIFY_H
 
 #include <file/format.h>
 #include <list/list.h>
@@ -15,7 +15,7 @@ typedef struct __todox_notify_process_t {
     /// index of the next alarm to fire
     size_t current_index;
     /// non-zero while the daemon should keep running
-    int is_running;
+    bool is_running;
 } todox_notify_process_t;
 
 /** @brief creates a notify process.

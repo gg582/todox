@@ -1,5 +1,5 @@
-#ifndef __TODOX_REPEAT_H__
-#define __TODOX_REPEAT_H__
+#ifndef TODOX_REPEAT_H
+#define TODOX_REPEAT_H
 
 #include <file/format.h>
 #include <stddef.h>

@@ -1,13 +1,13 @@
-#ifndef __TODOX_PARSE_H__
-#define __TODOX_PARSE_H__
+#ifndef TODOX_PARSE_H
+#define TODOX_PARSE_H
 
 #include <file/format.h>
 
 /** @brief checks if a string is a ts%%task%%comment triplet.
  * @param[in] s a string to check.
- * @return non-zero if triplet, zero otherwise.
+ * @return true if triplet, false otherwise.
  */
-int is_triplet(const char *s);
+bool is_triplet(const char *s);
 
 /** @brief parses a ts%%task%%comment triplet into a todox item.
  * @param[in] s a triplet string.
@@ -24,9 +24,9 @@ int parse_triplet(const char *s, todox_format_t *out);
  *          group name rather than a timestamp, so multiple entries can share
  *          the same task name.
  * @param[in] s a string to check.
- * @return non-zero if the string looks like a multi-alarm entry, zero otherwise.
+ * @return true if the string looks like a multi-alarm entry, false otherwise.
  */
-int is_multi_triplet(const char *s);
+bool is_multi_triplet(const char *s);
 
 /** @brief parses a multi-alarm string into a todox item.
  * @details field order: group_name%%comment%%timestamp

@@ -39,10 +39,10 @@ static int parse_tz_offset(const char *s) {
 time_t iso8601_to_time_t(const char *ts) {
     struct tm tm_time = {0};
     time_t t = (time_t)-1;
-    int has_tz = 0;
+    bool has_tz = false;
 
     if(strptime(ts, TODOX_TIME_FORMAT, &tm_time) != NULL) {
-        has_tz = 1;
+        has_tz = true;
     } else if(try_convert_without_tz(ts, &tm_time) == NULL) {
         todox_notify(TODOX_ERROR("wrong time format", WARN, TODOX_WRONG_TIMESTAMP));
         return t;

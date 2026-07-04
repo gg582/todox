@@ -113,7 +113,7 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
     proc->config_path = config_path;
     proc->alarm_list = todox_parse_config(config_path);
     proc->current_index = 0;
-    proc->is_running = 1;
+    proc->is_running = true;
 
     time_t now = get_current_time();
     proc->current_index = find_next_alarm(proc, now);
