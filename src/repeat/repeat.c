@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE 700
+#define _BSD_SOURCE
 #ifdef __linux__
 #define _GNU_SOURCE
 #endif
