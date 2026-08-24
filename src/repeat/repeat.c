@@ -9,10 +9,6 @@
 #include <time.h>
 #include <ctype.h>
 
-#ifndef __linux__
-#include <compat/bsd/time.h>
-#endif
-
 static void trim(char *s) {
     char *start = s;
 
