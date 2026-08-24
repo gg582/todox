@@ -9,10 +9,6 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifndef __linux__
-#include <compat/bsd/time.h>
-#endif
-
 /** @brief tries parsing a datetime string without timezone. */
 static inline char *try_convert_without_tz(const char *s, struct tm *tm_time) {
     return strptime(s, TODOX_TIME_COMPAT_FORMAT, tm_time);
