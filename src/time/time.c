@@ -10,7 +10,8 @@
 
 #if defined(__OpenBSD__)
 /* FIXME: it is deprecated, but somehow build fails on OpenBSD when removing this. */
-time_t timegm(struct tm *tm);
+#define _XOPEN_SOURCE 700
+#define _BSD_SOURCE
 #include <sys/types.h>
 #endif 
 

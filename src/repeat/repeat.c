@@ -1,8 +1,15 @@
-#define _XOPEN_SOURCE 700
 #define _DEFAULT_SOURCE
 #ifdef __linux__
 #define _GNU_SOURCE
 #endif
+
+#if defined(__OpenBSD__)
+/* FIXME: it is deprecated, but somehow build fails on OpenBSD when removing this. */
+#define _XOPEN_SOURCE 700
+#define _BSD_SOURCE
+#include <sys/types.h>
+#endif 
+
 
 #include <repeat/repeat.h>
 #include <string.h>
