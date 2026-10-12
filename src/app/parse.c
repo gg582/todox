@@ -15,9 +15,14 @@ static void trim(char *s) {
 }
 
 static inline int looks_like_time_only(const char *s) {
-    return isdigit((unsigned char)s[0]) && isdigit((unsigned char)s[1]) && s[2] == ':' &&
-           isdigit((unsigned char)s[3]) && isdigit((unsigned char)s[4]) && s[5] == ':' &&
-           isdigit((unsigned char)s[6]) && isdigit((unsigned char)s[7]);
+    return isdigit((unsigned char)s[0])
+        && isdigit((unsigned char)s[1])
+        && s[2] == ':'
+        && isdigit((unsigned char)s[3])
+        && isdigit((unsigned char)s[4])
+        && s[5] == ':'
+        && isdigit((unsigned char)s[6])
+        && isdigit((unsigned char)s[7]);
 }
 
 /* assume today for time-only timestamps */
@@ -127,8 +132,11 @@ static bool third_field_is_timestamp(const char *s) {
         return true;
     }
     /* full datetime: YYYY-MM-DD HH:MM:SS */
-    if(isdigit((unsigned char)ts[0]) && isdigit((unsigned char)ts[1]) &&
-       isdigit((unsigned char)ts[2]) && isdigit((unsigned char)ts[3]) && ts[4] == '-') {
+    if(isdigit((unsigned char)ts[0])
+    && isdigit((unsigned char)ts[1])
+    && isdigit((unsigned char)ts[2])
+    && isdigit((unsigned char)ts[3])
+    && ts[4] == '-') {
         return true;
     }
     return false;

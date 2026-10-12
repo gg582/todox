@@ -1,5 +1,5 @@
 #define _XOPEN_SOURCE 700
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #ifdef __linux__
 #define _GNU_SOURCE
 #endif
@@ -32,7 +32,7 @@ static int parse_tz_offset(const char *s) {
     return 0;
 }
 
-/** @brief parses an ISO 8601 datetime string into a time_t (implementation). */
+/** @brief parses an ISO 8601 datetime string into a time_t. */
 time_t iso8601_to_time_t(const char *ts) {
     struct tm tm_time = {0};
     time_t t = (time_t)-1;

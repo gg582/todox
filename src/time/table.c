@@ -48,7 +48,7 @@ int todox_write_config(const char *config, const todox_list *lst) {
     FILE *config_file = fopen(config, "wt");
     if(config_file == nullptr) {
         todox_notify(
-            TODOX_ERROR("failed to open config file for writing", ERROR, TODOX_NO_CONFIG_FILE));
+            TODOX_ERROR("failed to open config file for writing", CRITICAL, TODOX_NO_CONFIG_FILE));
         return -1;
     }
 

@@ -1,6 +1,7 @@
 #include <error/error.h>
 #include <stdlib.h>
 
+/** @brief make an error. */
 todox_error_t TODOX_ERROR(const char *msg, enum TODOX_ERROR_LEVEL level, int code) {
     todox_error_t err;
     err.msg = msg;
@@ -9,6 +10,7 @@ todox_error_t TODOX_ERROR(const char *msg, enum TODOX_ERROR_LEVEL level, int cod
     return err;
 }
 
+/** @brief notify errors. exit with error code when error level is CRITICAL. */
 void todox_notify(const todox_error_t err) {
     if(err.level == DEBUG && TODOX_DEBUG_PRINT == 0) {
         return;
@@ -18,7 +20,7 @@ void todox_notify(const todox_error_t err) {
         case WARN:
             fprintf(stderr, "[WARN] msg: %s(code: %d)\n", err.msg, err.code);
             break;
-        case ERROR:
+        case CRITICAL:
             fprintf(stderr, "[ERROR] msg: %s(exit code: %d)\n", err.msg, err.code);
             exit(err.code);
         case INFO:

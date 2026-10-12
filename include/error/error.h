@@ -14,7 +14,7 @@
 #define TODOX_DEBUG_PRINT 0
 #endif
 
-enum TODOX_ERROR_LEVEL { DEFAULT, ERROR, WARN, INFO, DEBUG };
+enum TODOX_ERROR_LEVEL { DEFAULT, INFO, WARN, CRITICAL, DEBUG };
 
 typedef struct __todox_error_t {
     enum TODOX_ERROR_LEVEL level;

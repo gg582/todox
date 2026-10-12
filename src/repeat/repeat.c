@@ -1,5 +1,5 @@
 #define _XOPEN_SOURCE 700
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
 #ifdef __linux__
 #define _GNU_SOURCE
 #endif
@@ -10,7 +10,7 @@
 #include <time.h>
 #include <ctype.h>
 
-static void trim(char *s) {
+static inline void trim(char *s) {
     char *start = s;
 
     while(*start != '\0' && isspace((unsigned char)*start)) {
