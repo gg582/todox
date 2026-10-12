@@ -9,6 +9,8 @@
 #include <string.h>
 
 #if defined(__OpenBSD__)
+/* FIXME: it is deprecated, but somehow build fails on OpenBSD when removing this. */
+time_t timegm(struct tm *tm);
 #include <sys/types.h>
 #endif 
 
