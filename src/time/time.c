@@ -8,6 +8,11 @@
 #include <error/error.h>
 #include <time.h>
 #include <string.h>
+
+#if defined(__OpenBSD__)
+#include <sys/types.h>
+#endif 
+
 #include <ctype.h>
 
 /** @brief tries parsing a datetime string without timezone. */
