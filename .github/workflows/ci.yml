@@ -49,7 +49,7 @@ jobs:
             pkg_add -I cmake pkgconf dbus bash
           run: |
             bash -c '
-              set -euo pipefall
+              set -euo pipefail
               cmake -S . -B build
               cmake --build build
               ctest --test-dir build --output-on-failure
