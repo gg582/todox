@@ -46,8 +46,11 @@ jobs:
         with:
           usesh: true
           prepare: |
-            pkg_add -I cmake pkgconf dbus
+            pkg_add -I cmake pkgconf dbus bash
           run: |
-            cmake -S . -B build
-            cmake --build build
-            ctest --test-dir build --output-on-failure
+            bash -c '
+              set -euo pipefall
+              cmake -S . -B build
+              cmake --build build
+              ctest --test-dir build --output-on-failure
+            '
