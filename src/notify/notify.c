@@ -8,9 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <signal.h>
+#include <unistd.h>
 
-/* polling interval when no future alarm is pending */
-#define TODOX_NO_ALARM_POLL_INTERVAL_MS 10000
+static void on_reload(int sig) { (void)sig; }
 
 void todox_msleep(long ms) {
     if(ms <= 0) {
@@ -22,9 +23,7 @@ void todox_msleep(long ms) {
     struct timespec ts;
     ts.tv_sec = ms / 1000;
     ts.tv_nsec = (ms % 1000) * 1000000;
-    while(nanosleep(&ts, &ts) == -1) {
-        /* retry if interrupted by a signal */
-    }
+    nanosleep(&ts, nullptr);
 }
 
 static inline time_t get_current_time(void) { return time(nullptr); }
@@ -114,6 +113,14 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
     proc->alarm_list = todox_parse_config(config_path);
     proc->current_index = 0;
     proc->is_running = true;
+    signal(SIGUSR1, on_reload);
+    char pid_path[4096];
+    snprintf(pid_path, sizeof(pid_path), "%s.pid", config_path);
+    FILE *pid_file = fopen(pid_path, "w");
+    if(pid_file != nullptr) {
+        fprintf(pid_file, "%ld\n", (long)getpid());
+        fclose(pid_file);
+    }
 
     time_t now = get_current_time();
     proc->current_index = find_next_alarm(proc, now);
@@ -132,15 +139,13 @@ void todox_notify_process_destroy(todox_notify_process_t *proc) {
 
 int todox_notify_process_run(todox_notify_process_t *proc) {
     while(proc->is_running) {
+        reload_alarms(proc);
         time_t now = get_current_time();
         purge_past_alarms(proc, now);
         size_t next_idx = find_next_alarm(proc, now);
 
         if(next_idx >= proc->alarm_list.len) {
-            /* no pending future alarms. wait a short interval, then reload
-             * the config so newly added alarms are picked up. */
-            todox_msleep(TODOX_NO_ALARM_POLL_INTERVAL_MS);
-            reload_alarms(proc);
+            pause();
             continue;
         }
 

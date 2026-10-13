@@ -5,6 +5,7 @@
 #include <error/error.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 /** @brief parse a config file.
  * @param config path to a config file.
@@ -67,5 +68,17 @@ int todox_write_config(const char *config, const todox_list *lst) {
     }
 
     fclose(config_file);
+
+    char pid_path[4096];
+    long pid;
+    snprintf(pid_path, sizeof(pid_path), "%s.pid", config);
+    FILE *pid_file = fopen(pid_path, "r");
+    if(pid_file != nullptr) {
+        if(fscanf(pid_file, "%ld", &pid) == 1 && pid > 0) {
+            /* wake the daemon's nanosleep/pause so it reloads and reschedules */
+            kill((pid_t)pid, SIGUSR1);
+        }
+        fclose(pid_file);
+    }
     return 0;
 }
