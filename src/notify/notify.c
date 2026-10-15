@@ -198,7 +198,7 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
                 alarm = &proc->alarm_list.tasks[next_idx];
                 sleep_ms = time_diff_ms(alarm->ts, now);
 
-                if(sleep_ms <= 0) return 0;
+                if(sleep_ms <= 0) continue;
                 todox_msleep(proc, sleep_ms);
             }
         }
