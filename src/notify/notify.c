@@ -10,20 +10,44 @@
 #include <time.h>
 #include <signal.h>
 #include <unistd.h>
+#include <poll.h>
 
 static void on_reload(int sig) { (void)sig; }
 
-void todox_msleep(long ms) {
+int todox_msleep(todox_notify_process_t *proc, long ms) {
     if(ms <= 0) {
-        return;
+        goto NO_EVENT;
     }
-    /* nanosleep is used on all platforms. It is POSIX.1-2008 compliant,
-     * handles signal interruption correctly, and avoids the deprecated
-     * usleep() workaround that was previously Linux-specific. */
-    struct timespec ts;
-    ts.tv_sec = ms / 1000;
-    ts.tv_nsec = (ms % 1000) * 1000000;
-    nanosleep(&ts, nullptr);
+
+    int fd;
+    switch((int)(proc && proc->wakeup_pipe[0] >= 0)) {
+        case 1:
+        fd = proc->wakeup_pipe[0];
+        break;
+
+        default:
+        fd = -1;
+    }
+
+    struct pollfd p_fd;
+    memset(&p_fd, 0, sizeof(struct pollfd));
+    p_fd.fd = fd;
+    p_fd.events = POLLIN;
+
+    int ret = poll(&fd >= 0 ? &p_fd : nullptr, (int)((_Bool)fd), ms);
+
+    switch((int)((ret > 0) && (p_fd.revents & POLLIN))) {
+        case 0:
+            goto NO_EVENT;
+    }
+    char *buf = malloc(128);
+    read(fd, buf, 128);
+    memset(buf, 0, 128);
+    free(buf);
+    return -1;
+
+NO_EVENT:
+    return 0;
 }
 
 static inline time_t get_current_time(void) { return time(nullptr); }
@@ -154,7 +178,20 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
         long sleep_ms = time_diff_ms(alarm->ts, now);
 
         if(sleep_ms > 0) {
-            todox_msleep(sleep_ms);
+            int ret = todox_msleep(proc, sleep_ms);
+            if(ret) {
+                reload_alarms(proc);
+                now = get_current_time();
+
+                purge_past_alarms(proc, now);
+                next_idx = find_next_alarm(proc, now);
+                proc->current_index = next_idx;
+                alarm = &proc->alarm_list.tasks[next_idx];
+                sleep_ms = time_diff_ms(alarm->ts, now);
+
+                if(sleep_ms <= 0) return 0;
+                todox_msleep(proc, sleep_ms);
+            }
         }
 
         now = get_current_time();

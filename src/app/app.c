@@ -15,6 +15,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+/** @brief notify wakeup when updating the alarm list. */
+static void todox_notify_wakeup(todox_notify_process_t *proc)
+{
+    if (!proc || proc->wakeup_pipe[1] < 0) {
+        return;
+    }
+
+    const char byte = 1;
+    (void)write(proc->wakeup_pipe[1], &byte, sizeof(byte));
+}
+
 /** @brief detaches the process into a background daemon.
  * @details performs the standard double-fork, setsid, umask(0), and
  *          redirects stdin/stdout/stderr to /dev/null. chdir("/") is
@@ -104,9 +115,9 @@ static int cmd_help(const char *progname) {
 }
 
 /** @brief loads alarms and runs the notification daemon loop. */
-static int run_daemon(int argc, char **argv) {
+static int run_daemon(int argc, char **argv, todox_notify_process_t *proc) {
     const char *file = get_alarm_file(argc, argv, 2);
-    todox_notify_process_t *proc = todox_notify_process_create(file);
+    proc = todox_notify_process_create(file);
     if(proc == nullptr) {
         fprintf(stderr, "failed to create notify process\n");
         return 1;
@@ -234,23 +245,27 @@ static int cmd_list(int argc, char **argv) {
 }
 
 int app_run(int argc, char **argv) {
+    todox_notify_process_t *proc = nullptr;
     if(argc >= 2 && (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0)) {
         return cmd_help(argv[0]);
     }
+
 
     if(argc >= 2 && strcmp(argv[1], "--daemonize") == 0) {
         if(daemonize() != 0) {
             fprintf(stderr, "failed to daemonize\n");
             return 1;
         }
-        return run_daemon(argc, argv);
+        return run_daemon(argc, argv, proc);
     }
 
     if(argc >= 2 && strcmp(argv[1], "add") == 0) {
+        if(proc != nullptr) todox_notify_wakeup(proc);
         return cmd_add(argc, argv);
     }
 
     if(argc >= 2 && strcmp(argv[1], "remove") == 0) {
+        if(proc != nullptr) todox_notify_wakeup(proc);
         return cmd_remove(argc, argv);
     }
 

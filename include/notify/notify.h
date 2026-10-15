@@ -3,6 +3,7 @@
 
 #include <file/format.h>
 #include <list/list.h>
+#include <stdatomic.h>
 
 /** @struct todox_notify_process_t
  * @brief a daemon process that wakes up for future alarms.
@@ -16,6 +17,9 @@ typedef struct __todox_notify_process_t {
     size_t current_index;
     /// non-zero while the daemon should keep running
     bool is_running;
+    bool has_reloaded;
+    /// wapeup pipe; read:0, write:1
+    int wakeup_pipe[2];
 } todox_notify_process_t;
 
 /** @brief creates a notify process.
@@ -45,6 +49,6 @@ int todox_send_desktop_notification(const char *title, const char *body);
 /** @brief sleeps for a given number of milliseconds.
  * @param[in] ms milliseconds to sleep.
  */
-void todox_msleep(long ms);
+int todox_msleep(todox_notify_process_t *proc, long ms);
 
 #endif
