@@ -15,8 +15,8 @@ static int g_tests_failed = 0;
         int has_failed = g_tests_failed;                                                           \
         printf("  running %s ... ", #name);                                                        \
         test_##name();                                                                             \
-        if(g_tests_failed != has_failed) puts("FAILED");
-        else puts("OK");
+        if(g_tests_failed != has_failed) puts("FAILED");                                           \
+        else puts("OK");                                                                           \
     } while(0)
 
 #define ASSERT(cond)                                                                               \
