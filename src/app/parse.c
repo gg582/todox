@@ -42,7 +42,7 @@ static void prepend_today(char *buf, size_t bufsize) {
     }
     
     // WARN: DANGEROUS MEMORY MANAGEMENT VIA memmove+memcpy
-    // memmove+memcpy is a rough call; currently I have no idea to refactor it, but when the format goes longer I should fix.
+    // memmove+memcpy is a rough call; no need to fix, but BE CAREFUL.
     memmove(buf + prefix_len, buf, buf_len + 1);
     memcpy(buf, date_prefix, prefix_len);
 }

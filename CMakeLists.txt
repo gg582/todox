@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(todox C)
 
-add_compile_options(-Werror -Os)
+add_compile_options(-Werror -Os -Wextra)
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 

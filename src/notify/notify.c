@@ -34,7 +34,7 @@ int todox_msleep(todox_notify_process_t *proc, long ms) {
     p_fd.fd = fd;
     p_fd.events = POLLIN;
 
-    int ret = poll(&fd >= 0 ? &p_fd : nullptr, (int)((_Bool)fd), ms);
+    int ret = poll(&fd >= (int *)0 ? &p_fd : nullptr, (int)((_Bool)fd), ms);
 
     switch((int)((ret > 0) && (p_fd.revents & POLLIN))) {
         case 0:

@@ -23,8 +23,8 @@ void print_tasks(const todox_list *lst) {
 
         struct tm *gmt = gmtime(&itm->ts), loc;
         time_t ts = timegm(gmt);
-        localtime_r(&ts, &loc);
-        if(&loc != nullptr) {
+        
+        if(localtime_r(&ts, &loc) != nullptr) {
             strftime(ts_str, sizeof(ts_str), TODOX_TIME_FORMAT, &loc);
         }
         printf("%s | %s | %s", ts_str, itm->task, itm->comment);
