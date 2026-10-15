@@ -30,4 +30,10 @@ time_t todox_next_weekly_occurrence(time_t t);
  */
 time_t todox_advance_repeat_to_future(time_t t, time_t now);
 
+/** @brief parse a timezone offset.
+ * @param[in] A timezone string. e.g: +0900
+ * @return an offset in 32-bit signed integer. 
+ */
+int parse_tz_offset(const char *s);
+
 #endif

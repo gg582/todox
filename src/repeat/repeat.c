@@ -17,6 +17,8 @@
 #include <time.h>
 #include <ctype.h>
 
+// A simple trim.
+// Whitespace at a BOTH SIDE will be trimmed.
 static inline void trim(char *s) {
     char *start = s;
 
@@ -72,6 +74,8 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
         int i = start;
         while(1) {
             wdays[(*count)++] = i;
+            // FIXME: possible infinite while loop.
+            // However, I couldn't find any usecase that triggers infinite loop.
             if(i == end) {
                 break;
             }
@@ -88,6 +92,8 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
         char *saveptr = nullptr;
         char *token = strtok_r(buf, ":", &saveptr);
         while(token != nullptr) {
+            // FIXME: possible infinite while loop.
+            // However, I couldn't find any usecase that triggers infinite loop.
             int w = parse_single_wday(token);
             if(w < 0) {
                 return -1;
@@ -110,7 +116,7 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
 }
 
 /** @brief parses a timezone offset of the form +HHMM or -HHMM into seconds. */
-static int parse_tz_offset(const char *s) {
+int parse_tz_offset(const char *s) {
     size_t len = strlen(s);
     if(len < 5) {
         return 0;

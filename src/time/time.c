@@ -5,6 +5,8 @@
 
 #include <file/format.h>
 #include <error/error.h>
+#include <repeat/repeat.h>
+
 #include <time.h>
 #include <string.h>
 
@@ -22,36 +24,22 @@ static inline char *try_convert_without_tz(const char *s, struct tm *tm_time) {
     return strptime(s, TODOX_TIME_COMPAT_FORMAT, tm_time);
 }
 
-static int parse_tz_offset(const char *s) {
-    size_t len = strlen(s);
-    if(len < 5) {
-        return 0;
-    }
-    const char *tz = s + len - 5;
-    if((tz[0] == '+' || tz[0] == '-') && isdigit((unsigned char)tz[1]) &&
-       isdigit((unsigned char)tz[2]) && isdigit((unsigned char)tz[3]) &&
-       isdigit((unsigned char)tz[4])) {
-        int sign = (tz[0] == '+') ? 1 : -1;
-        int hours = (tz[1] - '0') * 10 + (tz[2] - '0');
-        int mins = (tz[3] - '0') * 10 + (tz[4] - '0');
-        return sign * (hours * 3600 + mins * 60);
-    }
-    return 0;
-}
-
 /** @brief parses an ISO 8601 datetime string into a time_t. */
 time_t iso8601_to_time_t(const char *ts) {
     struct tm tm_time = {0};
     time_t t = (time_t)-1;
     bool has_tz = false;
 
+    // First, parse a timestamp with an explicit timezone.
     if(strptime(ts, TODOX_TIME_FORMAT, &tm_time) != nullptr) {
         has_tz = true;
+    // If there is NO timestamp, retry conversion without explicit timezone.
     } else if(try_convert_without_tz(ts, &tm_time) == nullptr) {
         todox_notify(TODOX_ERROR("wrong time format", WARN, TODOX_WRONG_TIMESTAMP));
         return t;
     }
 
+    // If a system has a timezone, apply its offset.
     if(has_tz) {
         t = timegm(&tm_time);
         if(t != (time_t)-1) {
@@ -61,6 +49,8 @@ time_t iso8601_to_time_t(const char *ts) {
         t = mktime(&tm_time);
     }
 
+    // If time == -1, it means we failed to parse any information.
+    // Display WARN without killing a program.
     if(t == (time_t)-1) {
         todox_notify(
             TODOX_ERROR("failed to convert into posix timestamp", WARN, TODOX_WRONG_TIMESTAMP));
