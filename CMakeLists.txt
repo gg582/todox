@@ -24,9 +24,9 @@ set(TODOX_SOURCES
     src/notify/dbus.c
     src/error/error.c
     src/list/list.c
+    src/repeat/repeat.c
     src/time/time.c
     src/time/table.c
-    src/repeat/repeat.c
 )
 
 add_executable(todox ${TODOX_SOURCES})
