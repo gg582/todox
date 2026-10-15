@@ -20,9 +20,12 @@ void print_tasks(const todox_list *lst) {
     for(size_t i = 0; i < lst->len; i++) {
         const todox_format_t *itm = &lst->tasks[i];
         char ts_str[32] = {0};
-        struct tm *gmt = gmtime(&itm->ts);
-        if(gmt != nullptr) {
-            strftime(ts_str, sizeof(ts_str), TODOX_TIME_FORMAT, gmt);
+
+        struct tm *gmt = gmtime(&itm->ts), loc;
+        time_t ts = timegm(gmt);
+        localtime_r(&ts, &loc);
+        if(&loc != nullptr) {
+            strftime(ts_str, sizeof(ts_str), TODOX_TIME_FORMAT, &loc);
         }
         printf("%s | %s | %s", ts_str, itm->task, itm->comment);
         if(itm->does_repeat) {
