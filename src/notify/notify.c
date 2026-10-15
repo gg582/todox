@@ -41,7 +41,9 @@ int todox_msleep(todox_notify_process_t *proc, long ms) {
             goto NO_EVENT;
     }
     char buf[128];
-    read(fd, buf, 128);
+    int read_bytes = read(fd, buf, 128);
+    if(read_bytes == -1 || (read_bytes - 128))
+        todox_notify(TODOX_ERROR("failed to flush buffer: see the error code to see a return value", WARN, read_bytes));
     memset(buf, 0, 128);
     return -1;
 
