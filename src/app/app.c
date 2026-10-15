@@ -23,7 +23,9 @@ static void todox_notify_wakeup(todox_notify_process_t *proc)
     }
 
     const char byte = 1;
-    (void)write(proc->wakeup_pipe[1], &byte, sizeof(byte));
+    int ret = write(proc->wakeup_pipe[1], &byte, sizeof(byte));
+    if(ret == -1 || (sizeof(byte) - ret))
+        todox_notify(TODOX_ERROR("failed to write bytes: see error code to check a return value", WARN, ret));
 }
 
 /** @brief detaches the process into a background daemon.
