@@ -74,8 +74,6 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
         int i = start;
         while(1) {
             wdays[(*count)++] = i;
-            // FIXME: possible infinite while loop.
-            // However, I couldn't find any usecase that triggers infinite loop.
             if(i == end) {
                 break;
             }
@@ -92,8 +90,6 @@ static int parse_weekday_expr(const char *expr, int *wdays, size_t *count) {
         char *saveptr = nullptr;
         char *token = strtok_r(buf, ":", &saveptr);
         while(token != nullptr) {
-            // FIXME: possible infinite while loop.
-            // However, I couldn't find any usecase that triggers infinite loop.
             int w = parse_single_wday(token);
             if(w < 0) {
                 return -1;

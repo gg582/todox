@@ -40,10 +40,9 @@ int todox_msleep(todox_notify_process_t *proc, long ms) {
         case 0:
             goto NO_EVENT;
     }
-    char *buf = malloc(128);
+    char buf[128];
     read(fd, buf, 128);
     memset(buf, 0, 128);
-    free(buf);
     return -1;
 
 NO_EVENT:
@@ -137,6 +136,12 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
     proc->alarm_list = todox_parse_config(config_path);
     proc->current_index = 0;
     proc->is_running = true;
+
+    if(pipe(proc->wakeup_pipe) < 0) {
+        proc->wakeup_pipe[0] = -1;
+        proc->wakeup_pipe[1] = -1;
+    }
+
     signal(SIGUSR1, on_reload);
     char pid_path[4096];
     snprintf(pid_path, sizeof(pid_path), "%s.pid", config_path);
@@ -152,8 +157,10 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
 }
 
 void todox_notify_process_destroy(todox_notify_process_t *proc) {
-    if(proc == nullptr) {
-        return;
+    if(proc == nullptr) return;
+    for(int i = 0; i < 2; i++) {
+        if(proc->wakeup_pipe[i] >= 0)
+            close(proc->wakeup_pipe[i]);
     }
     if(proc->alarm_list.tasks != nullptr) {
         free(proc->alarm_list.tasks);

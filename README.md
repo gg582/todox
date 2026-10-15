@@ -73,13 +73,13 @@ The binary is written to `build/todox`.
 Run the installer from the desktop user account that should receive notifications:
 
 ```bash
-sudo ./install.sh systemd
+sudo -E ./install.sh systemd
 # or
-sudo ./install.sh openrc
+sudo -E ./install.sh openrc
 # or
-sudo ./install.sh slackware
+sudo -E ./install.sh slackware
 # or
-sudo ./install.sh bsd
+sudo -E ./install.sh bsd
 ```
 
 `install.sh` copies `build/todox` to `/usr/local/bin/todox`, creates `/usr/local/etc/todox/alarm.txt`, and installs the service file. After installation the service uses `TODOX_ALARM_FILE=/usr/local/etc/todox/alarm.txt`, so most commands do not need a file argument.
