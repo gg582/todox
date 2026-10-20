@@ -4,6 +4,7 @@
 #include <list/list.h>
 #include <repeat/repeat.h>
 #include <error/error.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <poll.h>
+#include <fcntl.h>
 
 static void on_reload(int sig) { (void)sig; }
 
@@ -34,17 +36,25 @@ int todox_msleep(todox_notify_process_t *proc, long ms) {
     p_fd.fd = fd;
     p_fd.events = POLLIN;
 
-    int ret = poll(&fd >= (int *)0 ? &p_fd : nullptr, (int)((_Bool)fd), ms);
+    int ret = poll(fd >= 0 ? &p_fd : nullptr, (int)(fd >= 0), ms);
 
     switch((int)((ret > 0) && (p_fd.revents & POLLIN))) {
         case 0:
             goto NO_EVENT;
+        default:
+            switch((int)((ret < 0) && errno == EINTR)) {
+                case 1:
+                    goto EVENT;
+            }
     }
     char buf[128];
     int read_bytes = read(fd, buf, 128);
     if(read_bytes == -1 || (read_bytes - 128))
         todox_notify(TODOX_ERROR("failed to flush buffer: see the error code to see a return value", WARN, read_bytes));
     memset(buf, 0, 128);
+    goto EVENT;
+
+EVENT:
     return -1;
 
 NO_EVENT:
@@ -143,6 +153,7 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
         proc->wakeup_pipe[0] = -1;
         proc->wakeup_pipe[1] = -1;
     }
+    fcntl(proc->wakeup_pipe[0], F_SETFL, O_NONBLOCK);
 
     signal(SIGUSR1, on_reload);
     char pid_path[4096];
