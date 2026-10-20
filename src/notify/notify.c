@@ -14,7 +14,26 @@
 #include <poll.h>
 #include <fcntl.h>
 
-static void on_reload(int sig) { (void)sig; }
+static volatile sig_atomic_t g_wakeup_pipe_w = -1,
+                             g_wakeup_pipe_err = 0;
+
+static void on_reload(int sig) {
+    (void)sig;
+    int err = errno;
+    if(g_wakeup_pipe_w >= 0) {
+        char byte = 'W';
+        int write_bytes = write(g_wakeup_pipe_w, &byte, 1);
+        if(write_bytes != 1)
+            g_wakeup_pipe_err = write_bytes;
+    }
+    errno = err;
+}
+
+static void drain_wakeup_pipe(int fd) {
+    if(fd < 0) return;
+    char buf[128];
+    while(read(fd, buf, 128) > 0);
+}
 
 int todox_msleep(todox_notify_process_t *proc, long ms) {
     if(ms <= 0) {
@@ -153,7 +172,11 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
         proc->wakeup_pipe[0] = -1;
         proc->wakeup_pipe[1] = -1;
     }
-    fcntl(proc->wakeup_pipe[0], F_SETFL, O_NONBLOCK);
+    if(proc->wakeup_pipe[0] >= 0) {
+        fcntl(proc->wakeup_pipe[0], F_SETFL, O_NONBLOCK);
+        fcntl(proc->wakeup_pipe[1], F_SETFL, O_NONBLOCK);
+        g_wakeup_pipe_w = proc->wakeup_pipe[1];
+    }
 
     signal(SIGUSR1, on_reload);
     char pid_path[4096];
@@ -171,6 +194,8 @@ todox_notify_process_t *todox_notify_process_create(const char *config_path) {
 
 void todox_notify_process_destroy(todox_notify_process_t *proc) {
     if(proc == nullptr) return;
+    g_wakeup_pipe_w = -1;
+
     for(int i = 0; i < 2; i++) {
         if(proc->wakeup_pipe[i] >= 0)
             close(proc->wakeup_pipe[i]);
@@ -188,31 +213,36 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
         purge_past_alarms(proc, now);
         size_t next_idx = find_next_alarm(proc, now);
 
+        long sleep_ms;
         if(next_idx >= proc->alarm_list.len) {
-            pause();
+            sleep_ms = -1;
+        } else {
+
+            proc->current_index = next_idx;
+            const todox_format_t *alarm = &proc->alarm_list.tasks[next_idx];
+            sleep_ms = time_diff_ms(alarm->ts, now);
+        }
+
+        if(sleep_ms != 0) {
+            int ret = todox_msleep(proc, sleep_ms);
+            if(ret) {
+                continue;
+            }
+            /** this will not cause any problems, but let a user know this issue.
+             * DO NOT raise an error level to CRITICAL.
+             */
+            if(g_wakeup_pipe_err) {
+               todox_notify(TODOX_ERROR("failed to write bytes: see the error code to see a return value", WARN, g_wakeup_pipe_err));
+               g_wakeup_pipe_err = 0;
+            }
+
+        }
+
+        if(next_idx >= proc->alarm_list.len) {
             continue;
         }
 
-        proc->current_index = next_idx;
         const todox_format_t *alarm = &proc->alarm_list.tasks[next_idx];
-        long sleep_ms = time_diff_ms(alarm->ts, now);
-
-        if(sleep_ms > 0) {
-            int ret = todox_msleep(proc, sleep_ms);
-            if(ret) {
-                reload_alarms(proc);
-                now = get_current_time();
-
-                purge_past_alarms(proc, now);
-                next_idx = find_next_alarm(proc, now);
-                proc->current_index = next_idx;
-                alarm = &proc->alarm_list.tasks[next_idx];
-                sleep_ms = time_diff_ms(alarm->ts, now);
-
-                if(sleep_ms <= 0) continue;
-                todox_msleep(proc, sleep_ms);
-            }
-        }
 
         now = get_current_time();
         if(alarm->ts <= now) {
