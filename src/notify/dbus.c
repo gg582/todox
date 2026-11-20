@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/** @brief set freedesktop notification mesage. */
+/** @brief set freedesktop notification message. */
 static inline DBusMessage * set_dbus_message() {
     DBusMessage *msg = dbus_message_new_method_call("org.freedesktop.Notifications",
                                        "/org/freedesktop/Notifications",
