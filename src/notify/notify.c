@@ -69,7 +69,7 @@ int todox_msleep(todox_notify_process_t *proc, long ms) {
     char buf[128];
     int read_bytes = read(fd, buf, 128);
     if(read_bytes == -1 || (read_bytes - 128))
-        todox_notify(TODOX_ERROR("failed to flush buffer: see the error code to see a return value", WARN, read_bytes));
+        todox_notify("failed to flush buffer: see the error code to see a return value", TODOX_ERROR(WARN, read_bytes));
     memset(buf, 0, 128);
     goto EVENT;
 
@@ -232,7 +232,7 @@ int todox_notify_process_run(todox_notify_process_t *proc) {
              * DO NOT raise an error level to CRITICAL.
              */
             if(g_wakeup_pipe_err) {
-               todox_notify(TODOX_ERROR("failed to write bytes: see the error code to see a return value", WARN, g_wakeup_pipe_err));
+               todox_notify("failed to write bytes: see the error code to see a return value", TODOX_ERROR(WARN, g_wakeup_pipe_err));
                g_wakeup_pipe_err = 0;
             }
 

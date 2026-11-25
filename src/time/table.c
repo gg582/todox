@@ -17,7 +17,7 @@ todox_list todox_parse_config(const char *config) {
 
     FILE *config_file = fopen(config, "rt");
     if(config_file == nullptr) {
-        todox_notify(TODOX_ERROR("config file not found, starting with empty alarm list", DEBUG,
+        todox_notify("config file not found, starting with empty alarm list", TODOX_ERROR(DEBUG,
                                  TODOX_NO_CONFIG_FILE));
         return lst;
     }
@@ -48,8 +48,10 @@ todox_list todox_parse_config(const char *config) {
 int todox_write_config(const char *config, const todox_list *lst) {
     FILE *config_file = fopen(config, "wt");
     if(config_file == nullptr) {
-        todox_notify(
-            TODOX_ERROR("failed to open config file for writing", CRITICAL, TODOX_NO_CONFIG_FILE));
+        // this is "the only" CRITICAL error in this application.
+        todox_notify("failed to open config file for writing", TODOX_ERROR(CRITICAL, TODOX_NO_CONFIG_FILE));
+        // application's return code is TODOX_NO_CONFIG_FILE(110); -1 is just for this function.
+        // it won't reach since todox_notify will exit this application at its call before returning -1
         return -1;
     }
 

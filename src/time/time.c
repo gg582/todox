@@ -35,7 +35,7 @@ time_t iso8601_to_time_t(const char *ts) {
         has_tz = true;
     // If there is NO timestamp, retry conversion without explicit timezone.
     } else if(try_convert_without_tz(ts, &tm_time) == nullptr) {
-        todox_notify(TODOX_ERROR("wrong time format", WARN, TODOX_WRONG_TIMESTAMP));
+        todox_notify("wrong time format", TODOX_ERROR(WARN, TODOX_WRONG_TIMESTAMP));
         return t;
     }
 
@@ -52,8 +52,7 @@ time_t iso8601_to_time_t(const char *ts) {
     // If time == -1, it means we failed to parse any information.
     // Display WARN without killing a program.
     if(t == (time_t)-1) {
-        todox_notify(
-            TODOX_ERROR("failed to convert into posix timestamp", WARN, TODOX_WRONG_TIMESTAMP));
+        todox_notify("failed to convert into posix timestamp", TODOX_ERROR(WARN, TODOX_WRONG_TIMESTAMP));
     }
     return t;
 }

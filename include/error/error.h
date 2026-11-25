@@ -16,23 +16,22 @@
 
 enum TODOX_ERROR_LEVEL { DEFAULT, INFO, WARN, CRITICAL, DEBUG };
 
-typedef struct __todox_error_t {
+typedef struct prim__todox_error_t {
     enum TODOX_ERROR_LEVEL level;
     int code;
-    const char *msg;
 } todox_error_t;
 
 /** @brief notifies an error message according to its level.
+ * @param[in] msg an error message.
  * @param[in] err an error to notify.
  */
-void todox_notify(const todox_error_t err);
+void todox_notify(const char *msg, const todox_error_t err);
 
 /** @brief creates an error struct.
- * @param[in] msg an error message.
  * @param[in] level an error level.
  * @param[in] code an error code.
  * @return an error struct.
  */
-todox_error_t TODOX_ERROR(const char *msg, enum TODOX_ERROR_LEVEL level, int code);
+todox_error_t TODOX_ERROR(enum TODOX_ERROR_LEVEL level, int code);
 
 #endif
